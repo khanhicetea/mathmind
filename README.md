@@ -85,7 +85,14 @@ public/
   js/progress.js          days/streaks, XP/levels, achievements, skills, heatmap (pure, tested)
   js/store.js             localStorage, v1 migration, pending-session snapshot, backup hydrate
   js/fx.js                sound, haptics, confetti, toasts
-  js/app.js               UI controller
+  js/app.js               entry point: wires modules, registers views, boots
+  js/state.js             the single shared app state (+ replaceState for import/reset)
+  js/util.js              $ helper, formatters, labels, shared markup helpers
+  js/nav.js               tab bar + go(view); views register their renderer
+  js/mascot.js            mascot poses
+  js/game.js              game loop: modes, timer, numpad/keyboard, scoring, session recovery
+  js/pwa.js               install prompt + service-worker registration
+  js/views/               home · progress · awards · settings · summary (render + event wiring each)
   sw.js, manifest.webmanifest, icons/
 test/                     node:test unit tests
 ```
