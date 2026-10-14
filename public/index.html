@@ -35,9 +35,12 @@
 
     <div class="daily-card" id="daily-card">
       <div class="daily-top">
-        <div class="streak-big">
-          <span class="flame" aria-hidden="true">🔥</span>
-          <div><b id="streak-num">0</b><small data-i18n="day_streak">day streak</small></div>
+        <div class="daily-left">
+          <div class="streak-big">
+            <span class="flame" aria-hidden="true">🔥</span>
+            <b id="streak-num">0</b><small data-i18n="day_streak">day streak</small>
+          </div>
+          <div class="week" id="week"></div>
         </div>
         <div class="ring" data-i18n-aria="goal_ring" role="img" id="goal-ring">
           <svg viewBox="0 0 64 64" aria-hidden="true">
@@ -47,13 +50,11 @@
           <div class="ring-text"><b id="goal-num">0</b><small id="goal-of">/ 20</small></div>
         </div>
       </div>
-      <div class="week" id="week"></div>
       <p class="daily-msg" id="daily-msg"></p>
-    </div>
-
-    <div class="xp-card">
-      <div class="xp-head"><b id="xp-level"></b><span id="xp-num"></span></div>
-      <div class="xp-bar"><i id="xp-fill"></i></div>
+      <div class="xp-in">
+        <div class="xp-head"><b id="xp-level"></b><span id="xp-num"></span></div>
+        <div class="xp-bar"><i id="xp-fill"></i></div>
+      </div>
     </div>
 
     <div class="modes" id="modes">
@@ -61,7 +62,7 @@
         <button class="mode-go-area" data-mode="daily" aria-describedby="mode-daily-sub">
           <span class="mode-icon" aria-hidden="true">📅</span>
           <span class="mode-text"><b data-i18n="mode.daily">Daily Challenge</b><small id="mode-daily-sub"></small></span>
-          <span class="mode-badge" id="mode-daily-badge">NEW</span>
+          <span class="mode-cta" id="mode-daily-badge">Play ▶</span>
         </button>
         <div class="diff-pills" id="daily-diff" role="group" data-i18n-aria="diff_aria"></div>
       </div>
@@ -79,12 +80,14 @@
           </button>
           <button class="len-pill" id="sprint-len"></button>
           <small id="mode-sprint-sub"></small>
+          <span class="ptile-cta" data-i18n="cta_play" aria-hidden="true">Play ▶</span>
         </div>
         <div class="ptile m-endless">
           <button class="ptile-go" data-mode="endless" aria-describedby="mode-endless-sub">
             <span class="mode-icon" aria-hidden="true">♾️</span><b data-i18n="mode.endless">Endless</b>
           </button>
           <small id="mode-endless-sub"></small>
+          <span class="ptile-cta" data-i18n="cta_play" aria-hidden="true">Play ▶</span>
         </div>
       </div>
     </div>

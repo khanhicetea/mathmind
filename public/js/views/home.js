@@ -95,7 +95,7 @@ function renderDailyMode() {
   $('mode-daily-sub').textContent = daily
     ? t('daily_done', { c: daily.correct, q: DAILY_QUESTIONS, p: fmt(daily.score) })
     : t('daily_new', { q: DAILY_QUESTIONS, d: t(`lv.${DAILY_DIFFS[diff].level}`) });
-  $('mode-daily-badge').textContent = daily ? '✓' : t('badge_new');
+  $('mode-daily-badge').textContent = daily ? t('cta_replay') : t('cta_play');
   $('mode-daily-badge').classList.toggle('done', !!daily);
   $('daily-diff').innerHTML = DAILY_DIFF_KEYS.map(
     (k) =>
