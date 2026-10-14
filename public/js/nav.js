@@ -1,7 +1,7 @@
 import { $ } from './util.js';
 import { wave } from './mascot.js';
 
-const TABS = ['home', 'progress', 'awards', 'settings'];
+const TABS = ['home', 'learn', 'progress', 'awards', 'settings'];
 const renderers = {};
 
 // Views register their renderer here (see app.js) so nav never imports a view.

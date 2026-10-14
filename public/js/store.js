@@ -22,7 +22,7 @@ export function hydrate(obj) {
   if (obj.v !== 2) return migrateV1(obj);
   const st = defaults();
   Object.assign(st.settings, obj.settings);
-  for (const k of ['history', 'days', 'ops', 'daily', 'achievements']) {
+  for (const k of ['history', 'days', 'ops', 'daily', 'achievements', 'lessons']) {
     if (obj[k] && typeof obj[k] === 'object') st[k] = obj[k];
   }
   st.xp = Number(obj.xp) || 0;

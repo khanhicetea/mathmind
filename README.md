@@ -11,6 +11,21 @@ A static, installable (PWA) mental-math trainer built to be played **a few minut
 | ⏱️ **Sprint** | As many as you can in 1, 3 or 5 minutes of answering time (the 1s result pause doesn't eat your clock). 3-2-1 countdown. Each length keeps its own best score. |
 | ♾️ **Endless** | Relaxed practice until you press **Stop**, using your chosen operations and number size. |
 
+## Learn
+
+The **Learn** tab teaches *how* to calculate in your head with step-by-step visual lessons, built on one idea:
+remember a few facts, work out the rest with a rule. Each lesson is a short animated walkthrough, then a 6-question
+practice played through the normal game loop (number pad, XP, daily goal). A missed practice question shows the trick
+for that question. Finishing a lesson's practice for the first time marks it ✓ and gives +100 XP.
+
+| Lesson | What it shows |
+| --- | --- |
+| ✖️ **The shrinking times table** | The 9×9 grid loses every cell a rule covers (×1, ×2 doubling, ×5 = half of ×10, ×9 = ×10 − 1, swapping the order): 81 → 15 facts to learn by heart, each with a way to rebuild it. |
+| ✖️ **Split it up** | 23 × 4 as an area of squares, cut at the tens into 80 + 12, with a slider to try other cuts and a guided 34 × 6. |
+
+More lessons are listed as "Soon" (place value, pairs that make 10, rounding, counting up, ÷).
+Lesson content lives in `js/lessons.js` (pure, tested); each lesson's visual is a stage in `js/views/learn.js`.
+
 Every answer gets a 1-second result screen; a correct answer submits the instant it's typed (wrong ones need Enter).
 
 ## Habit & progression
@@ -18,7 +33,7 @@ Every answer gets a 1-second result screen; a correct answer submits the instant
 - **Daily goal** (10/20/30/50 correct answers, default 20) with a progress ring, plus a **day streak** that grows each day you hit it.
   It stays alive until the end of today, and a 7-day strip shows the week.
 - **XP & levels:** points become XP; +250 XP for the daily goal and +150/+250/+400 XP for the Daily Challenge (by difficulty). Titles go from Beginner to Grandmaster.
-- **23 achievements:** streaks, combos, Sprint marks, Daily Challenge, lifetime answers, levels, plus a few fun ones (Night Owl, Quick Draw…). Locked ones show progress.
+- **24 achievements:** streaks, combos, Sprint marks, Daily Challenge, lifetime answers, levels, plus a few fun ones (Night Owl, Quick Draw…). Locked ones show progress.
 - **In-game juice:** combo multiplier in the HUD, a score pop, 🔥 milestone every 5 in a row with confetti, plus sounds and haptics (each can be turned off).
 - **Progress tab:** records, a 17-week activity heatmap, per-operation **skills** (accuracy and speed) with the weakest op flagged
   **Focus** and a one-tap focused practice, plus recent sessions.
@@ -77,11 +92,12 @@ Light and dark mode follow the system.
 ```
 wrangler.jsonc            Cloudflare Workers config (assets-only)
 public/
-  index.html              screens: home · progress · awards · settings · play · summary
+  index.html              screens: home · learn · lesson · progress · awards · settings · play · summary
   404.html, _headers      Cloudflare not-found page + response headers
   css/style.css           theme (light + dark)
   fonts/                  Mali + Nunito + M PLUS Rounded 1c (Japanese subset, woff2) and their OFL licences
   js/engine.js            questions, daily seed, checking, scoring              (pure, tested)
+  js/lessons.js           Learn catalog, times-table rules, lesson practice sets  (pure, tested)
   js/progress.js          days/streaks, XP/levels, achievements, skills, heatmap (pure, tested)
   js/store.js             localStorage, v1 migration, pending-session snapshot, backup hydrate
   js/fx.js                sound, haptics, confetti, toasts
@@ -92,7 +108,7 @@ public/
   js/mascot.js            mascot poses
   js/game.js              game loop: modes, timer, numpad/keyboard, scoring, session recovery
   js/pwa.js               install prompt + service-worker registration
-  js/views/               home · progress · awards · settings · summary (render + event wiring each)
+  js/views/               home · learn · progress · awards · settings · summary (render + event wiring each)
   sw.js, manifest.webmanifest, icons/
 test/                     node:test unit tests
 ```

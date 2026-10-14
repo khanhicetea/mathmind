@@ -21,6 +21,7 @@ export const MODES = {
   daily: { label: 'Daily Challenge', icon: '📅' },
   sprint: { label: 'Sprint', icon: '⏱️' },
   endless: { label: 'Endless', icon: '♾️' },
+  lesson: { label: 'Lesson', icon: '📖' },
 };
 export const DAILY_QUESTIONS = 15;
 // Each difficulty is its own fixed set per date. `exactDiv`: ÷ always divides evenly;
@@ -147,6 +148,11 @@ export function generate(op, level, rng = Math.random, opts = {}) {
   }
 
   const whole = op === 'div' && !!opts.exactDiv && tenths % 10 === 0; // answer is an integer: no decimal input
+  return makeQuestion(op, a, b, tenths, whole);
+}
+
+/** The question object the game plays, for operands chosen elsewhere (generate, lessons). */
+export function makeQuestion(op, a, b, tenths, whole = false) {
   const par = (OPS[op].par * (digitCount(a) + digitCount(b))) / 4;
   return {
     op,

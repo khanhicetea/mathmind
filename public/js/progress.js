@@ -1,6 +1,7 @@
 // Pure progression logic: days & streaks, XP & levels, achievements, skills.
 // Operates on the plain `state` object; persistence lives in store.js.
 import { OPS, OP_KEYS, DAILY_QUESTIONS, DAILY_DIFFS, DEFAULT_DIFF, dailyId } from './engine.js';
+import { LESSON_QUESTIONS, LESSON_BONUS_XP } from './lessons.js';
 
 export const GOAL_OPTIONS = [10, 20, 30, 50];
 export const GOAL_BONUS_XP = 250;
@@ -12,6 +13,7 @@ export function emptyProgress() {
     ops: {}, // lifetime per-op { n, c, ms }
     daily: {}, // dailyId() 'YYYY-MM-DD:easy|medium|hard' -> first completed Daily Challenge { score, correct, ms, attempts, best }
     achievements: {}, // id -> unlocked timestamp
+    lessons: {}, // lesson id -> { at: first completed practice, best: most correct answers }
     records: {
       sessions: 0,
       goalsMet: 0,
@@ -21,14 +23,20 @@ export function emptyProgress() {
       dailyCount: 0,
       dailyPerfect: 0,
       avgMs: null,
-      score: {}, // per scoreKey(): 'daily_easy', 'daily_medium', 'daily_hard', 'endless', 'sprint60', 'sprint180', 'sprint300'
+      score: {}, // per scoreKey(): 'daily_easy', 'daily_medium', 'daily_hard', 'endless', 'sprint60', 'sprint180', 'sprint300', 'lesson_<id>'
     },
   };
 }
 
 /** Best-score bucket: each Sprint length / Daily difficulty keeps its own record (old sessions were all 60s / medium). */
 export const scoreKey = (s) =>
-  s.mode === 'sprint' ? `sprint${s.sprintSec || 60}` : s.mode === 'daily' ? `daily_${s.diff || DEFAULT_DIFF}` : s.mode;
+  s.mode === 'sprint'
+    ? `sprint${s.sprintSec || 60}`
+    : s.mode === 'daily'
+      ? `daily_${s.diff || DEFAULT_DIFF}`
+      : s.mode === 'lesson'
+        ? `lesson_${s.lesson}`
+        : s.mode;
 
 /* ---------------- days ---------------- */
 const pad2 = (n) => String(n).padStart(2, '0');
@@ -98,7 +106,7 @@ export function levelInfo(xp) {
 const lifetimeCorrect = (state) => OP_KEYS.reduce((n, k) => n + (state.ops[k]?.c || 0), 0);
 
 export function achievementContext(state) {
-  return { r: state.records, correct: lifetimeCorrect(state), level: levelInfo(state.xp).level };
+  return { r: state.records, correct: lifetimeCorrect(state), level: levelInfo(state.xp).level, lessons: Object.keys(state.lessons || {}).length };
 }
 
 const streakDays = (c) => c.r.bestDayStreak;
@@ -136,6 +144,7 @@ export const ACHIEVEMENTS = [
   { id: 'c5000', icon: '🏛️', name: 'Mental Athlete', desc: '5,000 correct answers', value: correct, goal: 5000 },
   { id: 'lv5', icon: '⭐', name: 'Rising Star', desc: 'Reach level 5', value: level, goal: 5 },
   { id: 'lv10', icon: '🌠', name: 'Shooting Star', desc: 'Reach level 10', value: level, goal: 10 },
+  { id: 'learn1', icon: '📖', name: 'Student', desc: 'Finish a lesson practice', value: (c) => c.lessons, goal: 1 },
   { id: 'quick', icon: '🚀', name: 'Quick Draw', desc: 'Solve a × or ÷ in under 3 seconds', test: (s) => s.quick },
   {
     id: 'flawless',
@@ -211,6 +220,19 @@ export function applySession(state, s) {
     }
   }
 
+  // Lessons: finishing the whole practice set completes the lesson; the first time earns a bonus.
+  let lessonFirst = false;
+  if (s.mode === 'lesson' && s.total >= LESSON_QUESTIONS) {
+    const lessons = (state.lessons ||= {});
+    const prev = lessons[s.lesson];
+    if (prev) prev.best = Math.max(prev.best, s.correct);
+    else {
+      lessons[s.lesson] = { at: s.ts + (s.durMs || 0), best: s.correct };
+      lessonFirst = true;
+      bonuses.push({ id: 'lesson', label: 'Lesson finished', xp: LESSON_BONUS_XP });
+    }
+  }
+
   const xpGained = s.score + bonuses.reduce((n, b) => n + b.xp, 0);
   state.xp += xpGained;
   day.xp += xpGained;
@@ -248,6 +270,7 @@ export function applySession(state, s) {
     dayStreak: streak,
     streakUp: streak > streakBefore,
     dailyRetry,
+    lessonFirst,
     best,
     unlocked: checkAchievements(state, s),
   };

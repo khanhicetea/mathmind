@@ -1,5 +1,5 @@
 // Offline-first app shell. Bump VERSION when files are added to / removed from SHELL.
-const VERSION = 'mathmind-v8';
+const VERSION = 'mathmind-v9';
 const SHELL = [
   './',
   'css/style.css',
@@ -11,11 +11,13 @@ const SHELL = [
   'js/game.js',
   'js/pwa.js',
   'js/views/home.js',
+  'js/views/learn.js',
   'js/views/progress.js',
   'js/views/awards.js',
   'js/views/settings.js',
   'js/views/summary.js',
   'js/engine.js',
+  'js/lessons.js',
   'js/store.js',
   'js/progress.js',
   'js/fx.js',

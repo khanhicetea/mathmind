@@ -1,4 +1,5 @@
 import { MODES, DAILY_QUESTIONS, DAILY_DIFFS, DEFAULT_DIFF } from '../engine.js';
+import { LESSON_QUESTIONS } from '../lessons.js';
 import * as fx from '../fx.js';
 import { t } from '../i18n.js';
 import { state } from '../state.js';
@@ -8,9 +9,11 @@ import { awIcon } from './awards.js';
 
 // The "Play again" button is wired in game.js, which owns startGame and the last-played options.
 let lastShare = '';
+let lastMode = '';
 
 export function renderSummary(s, g, res) {
   const { mode } = s;
+  lastMode = mode;
   const done = mode === 'daily' && s.total >= DAILY_QUESTIONS;
   $('sum-mode').textContent =
     `${MODES[mode].icon} ${modeLabel(s)}` + (g.focus ? ` · ${t('focus_tag', { op: opName(g.focus) })}` : '');
@@ -18,6 +21,7 @@ export function renderSummary(s, g, res) {
     daily: done ? (s.correct === s.total ? 'perfect_daily' : 'daily_done_t') : 'challenge_stopped',
     sprint: g.timeUp ? 'time_up' : 'sprint_stopped',
     endless: s.total >= 10 && s.correct === s.total ? 'perfect_run' : 'nice_session',
+    lesson: s.total >= LESSON_QUESTIONS ? (s.correct === s.total ? 'perfect_run' : 'lesson_done_t') : 'lesson_stopped',
   }[mode]);
 
   const badges = [];
@@ -82,7 +86,10 @@ export function renderSummary(s, g, res) {
     .map((m) => `<li><span>${m.text} = <b>${m.answer}</b></span><s>${m.given || '—'}</s></li>`)
     .join('');
 
-  $('sum-again').textContent = t(mode === 'daily' ? 'retry_challenge' : mode === 'sprint' ? 'sprint_again' : 'play_again');
+  $('sum-again').textContent = t(
+    { daily: 'retry_challenge', sprint: 'sprint_again', lesson: 'practice_again' }[mode] || 'play_again',
+  );
+  $('sum-home').textContent = t(mode === 'lesson' ? 'back_learn' : 'done');
   $('sum-share').hidden = !done;
   if (done) {
     const rows = [];
@@ -98,7 +105,7 @@ export function renderSummary(s, g, res) {
   }
 }
 
-$('sum-home').addEventListener('click', () => go('home'));
+$('sum-home').addEventListener('click', () => go(lastMode === 'lesson' ? 'learn' : 'home'));
 $('sum-share').addEventListener('click', async () => {
   try {
     if (navigator.share) await navigator.share({ text: lastShare });

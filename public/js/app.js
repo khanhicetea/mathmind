@@ -6,6 +6,7 @@ import { $ } from './util.js';
 import { registerView, go } from './nav.js';
 import { recoverPending } from './game.js';
 import { renderHome } from './views/home.js';
+import { renderLearn } from './views/learn.js';
 import { renderProgress } from './views/progress.js';
 import { renderAwards } from './views/awards.js';
 import { renderSettings } from './views/settings.js';
@@ -16,6 +17,7 @@ setLang(state.settings.lang);
 $('pad').classList.toggle('phone', !!state.settings.phonePad);
 
 registerView('home', renderHome);
+registerView('learn', renderLearn);
 registerView('progress', renderProgress);
 registerView('awards', renderAwards);
 registerView('settings', renderSettings);

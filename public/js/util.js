@@ -21,10 +21,17 @@ export const opName = (k) => t(`op.${k}`);
 export const modeName = (m) => t(`mode.${m}`);
 export const diffName = (d) => t(`diff.${DAILY_DIFFS[d] ? d : DEFAULT_DIFF}`);
 export const titleName = (title) => t(`title.${title}`);
+export const lessonName = (id) => t(`ln.${id}`);
 export const achText = (a) => t(`ach.${a.id}`).map((x) => x.replace(/\{q\}/g, DAILY_QUESTIONS));
 export const modeLabel = (s) =>
   (MODES[s.mode] ? modeName(s.mode) : '') +
-  (s.mode === 'sprint' ? ` ${sprintLabel(s.sprintSec || 60)}` : s.mode === 'daily' ? ` · ${diffName(s.diff)}` : '');
+  (s.mode === 'sprint'
+    ? ` ${sprintLabel(s.sprintSec || 60)}`
+    : s.mode === 'daily'
+      ? ` · ${diffName(s.diff)}`
+      : s.mode === 'lesson'
+        ? ` · ${lessonName(s.lesson)}`
+        : '');
 
 /* ---------------- markup + animation ---------------- */
 export const stat = (label, value) => `<div class="stat"><small>${label}</small><b>${value}</b></div>`;

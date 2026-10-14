@@ -1,7 +1,6 @@
 import {
   OP_KEYS,
   MODES,
-  DAILY_QUESTIONS,
   DAILY_DIFFS,
   RESULT_PAUSE_MS,
   SKIP_PENALTY,
@@ -11,6 +10,7 @@ import {
   scoreAnswer,
   summarize,
 } from './engine.js';
+import { LESSONS, lessonQuestions } from './lessons.js';
 import { dayKey, applySession } from './progress.js';
 import * as store from './store.js';
 import * as fx from './fx.js';
@@ -23,7 +23,8 @@ import { renderSummary } from './views/summary.js';
 
 const MAX_INPUT_LEN = 7;
 const COMBO_EVERY = 5;
-const SKIP_AFTER_MS = { daily: 10_000, endless: 20_000, sprint: 1_000 };
+const SKIP_AFTER_MS = { daily: 10_000, endless: 20_000, sprint: 1_000, lesson: 20_000 };
+const TIP_PAUSE_MS = 3000; // a missed lesson question stays up longer so its trick can be read
 
 let game = null;
 let tickId = 0;
@@ -39,15 +40,17 @@ export function startGame(mode, opts = {}) {
   cancelAnimationFrame(tickId);
   const today = dayKey();
   const diff = mode === 'daily' ? opts.diff || state.settings.dailyDiff : null;
+  const lesson = mode === 'lesson' ? opts.lesson : null;
   game = {
     mode,
-    ops: mode === 'daily' ? [...OP_KEYS] : opts.ops || state.settings.ops,
+    ops: mode === 'daily' ? [...OP_KEYS] : lesson ? [LESSONS[lesson].op] : opts.ops || state.settings.ops,
     focus: opts.ops?.length === 1 ? opts.ops[0] : null,
-    level: mode === 'daily' ? DAILY_DIFFS[diff].level : state.settings.level,
+    level: mode === 'daily' ? DAILY_DIFFS[diff].level : lesson ? null : state.settings.level,
     dailyKey: mode === 'daily' ? today : null,
     diff,
+    lesson,
     sprintSec: mode === 'sprint' ? state.settings.sprintSec : null,
-    queue: mode === 'daily' ? dailyQuestions(today, diff) : null,
+    queue: mode === 'daily' ? dailyQuestions(today, diff) : lesson ? lessonQuestions(lesson) : null,
     startedAt: Date.now(),
     log: [],
     mistakes: [],
@@ -65,7 +68,7 @@ export function startGame(mode, opts = {}) {
   };
   lastPlay = { mode, opts: diff ? { ...opts, diff } : opts }; // a retry replays the same difficulty
 
-  $('hud-4-label').textContent = t({ endless: 'st.correct', sprint: 'time', daily: 'question' }[mode]);
+  $('hud-4-label').textContent = t({ endless: 'st.correct', sprint: 'time', daily: 'question', lesson: 'question' }[mode]);
   $('hud-bar').hidden = mode === 'endless';
   $('hud-bar').classList.remove('hurry');
   $('hud-4-item').classList.remove('hurry');
@@ -73,7 +76,7 @@ export function startGame(mode, opts = {}) {
   resetCard();
   pose(playMascot, 'hello');
   go('play');
-  if (mode === 'endless') nextQuestion();
+  if (mode === 'endless' || mode === 'lesson') nextQuestion();
   else countdown();
 }
 
@@ -147,17 +150,17 @@ function nextQuestion() {
   tick();
 }
 
-function scheduleNext() {
+function scheduleNext(pauseMs = RESULT_PAUSE_MS) {
   const token = game;
   clearTimeout(nextTimer);
   nextTimer = setTimeout(() => {
     if (game !== token) return;
     const over =
-      (game.mode === 'daily' && game.log.length >= game.queue.length) ||
+      (game.queue && game.log.length >= game.queue.length) ||
       (game.mode === 'sprint' && game.usedMs >= game.sprintSec * 1000);
     if (over) finishGame();
     else nextQuestion();
-  }, RESULT_PAUSE_MS);
+  }, pauseMs);
 }
 
 function finishGame() {
@@ -273,9 +276,10 @@ function updateHud() {
   $('hud-streak').innerHTML = streak ? `🔥${streak}${mult}` : '0';
   $('hud-streak-item').classList.toggle('flame', streak >= 3);
   if (mode === 'endless') $('hud-4').textContent = `${correct}/${log.length}`;
-  else if (mode === 'daily') {
-    $('hud-4').textContent = `${Math.min(log.length + 1, DAILY_QUESTIONS)}/${DAILY_QUESTIONS}`;
-    $('hud-bar-fill').style.width = `${(100 * log.length) / DAILY_QUESTIONS}%`;
+  else if (game.queue) {
+    const n = game.queue.length;
+    $('hud-4').textContent = `${Math.min(log.length + 1, n)}/${n}`;
+    $('hud-bar-fill').style.width = `${(100 * log.length) / n}%`;
   } else renderSprintClock(game.sprintSec * 1000 - game.usedMs);
 }
 
@@ -341,10 +345,11 @@ function submit() {
   if (sc) scorePop(sc.points);
   fx.sound(milestone ? 'combo' : verdict.correct ? 'ok' : 'bad');
   fx.haptic(verdict.correct ? 15 : [60, 40, 60]);
-  showResult(verdict.correct, ms, sc, q, milestone);
+  const pause = !verdict.correct && q.tip ? TIP_PAUSE_MS : RESULT_PAUSE_MS;
+  showResult(verdict.correct, ms, sc, q, milestone, pause);
   if (milestone) fx.confetti({ y: 0.32, count: Math.min(30 + game.streak * 3, 140), power: 0.75 });
 
-  scheduleNext();
+  scheduleNext(pause);
 }
 
 function skip() {
@@ -373,14 +378,15 @@ function skip() {
   pose(playMascot, 'oops');
   $('result-title').textContent = `${q.text} = ${q.answerText}`;
   $('result-sub').textContent = t('skip_pen', { n: SKIP_PENALTY });
-  $('result-sub2').textContent = '';
-  $('result-sub2').className = 'result-sub2';
-  runPauseBar();
+  $('result-sub2').textContent = q.tip || '';
+  $('result-sub2').className = q.tip ? 'result-sub2 tip' : 'result-sub2';
+  const pause = q.tip ? TIP_PAUSE_MS : RESULT_PAUSE_MS;
+  runPauseBar(pause);
   $('result').hidden = false;
-  scheduleNext();
+  scheduleNext(pause);
 }
 
-function showResult(ok, ms, sc, q, milestone) {
+function showResult(ok, ms, sc, q, milestone, pause) {
   qcard.classList.toggle('ok', ok);
   qcard.classList.toggle('bad', !ok);
   $('result-icon').textContent = ok ? '✓' : '✗';
@@ -402,15 +408,16 @@ function showResult(ok, ms, sc, q, milestone) {
   } else {
     $('result-title').textContent = `${q.text} = ${q.answerText}`;
     $('result-sub').textContent = t('you_typed', { v: game.input });
-    sub2.textContent = t('streak_reset');
+    sub2.textContent = q.tip || t('streak_reset');
+    if (q.tip) sub2.classList.add('tip');
   }
-  runPauseBar();
+  runPauseBar(pause);
   $('result').hidden = false;
 }
 
-function runPauseBar() {
+function runPauseBar(ms = RESULT_PAUSE_MS) {
   const bar = $('pause-bar');
-  bar.style.setProperty('--pause', `${RESULT_PAUSE_MS}ms`);
+  bar.style.setProperty('--pause', `${ms}ms`);
   restartAnim(bar, 'run');
 }
 
@@ -421,6 +428,7 @@ const snapshot = (g) => ({
   level: g.level,
   dailyKey: g.dailyKey,
   diff: g.diff,
+  lesson: g.lesson,
   sprintSec: g.sprintSec,
   startedAt: g.startedAt,
   log: g.log,
@@ -437,6 +445,7 @@ function buildSession(g, endTs) {
     level: g.level,
     dailyKey: g.dailyKey,
     ...(g.diff && { diff: g.diff }),
+    ...(g.lesson && { lesson: g.lesson }),
     ...(g.sprintSec && { sprintSec: g.sprintSec }),
     quick: g.log.some((e) => e.correct && (e.op === 'mul' || e.op === 'div') && e.ms < 3000),
     ...summarize(g.log),
