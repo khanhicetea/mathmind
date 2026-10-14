@@ -45,7 +45,7 @@ export function openLesson(id) {
   $('lsn-kind').textContent = `${t(`kind.${l.kind}`)} · ${OPS[l.op].sym}`;
   $('lsn-title').textContent = lessonName(id);
   $('lsn-steps').innerHTML = '<i></i>'.repeat(l.steps);
-  lesson = { id, step: 0, stage: STAGES[id]($('lsn-stage')) };
+  lesson = { id, step: 0, stage: (STAGES[id] || demoStage(l))($('lsn-stage')) };
   go('lesson');
   showStep(0, 1);
 }
@@ -264,3 +264,35 @@ function splitStage(el) {
     },
   };
 }
+
+/* ---------------- stage: equation walkthrough (all `demo` lessons) ---------------- */
+// Each step reveals its lines one by one; an `ask` step is a 3-choice question.
+const demoStage = (l) => (el) => ({
+  show(i) {
+    const step = l.demo[i];
+    if (!step.ask) {
+      el.innerHTML = `<div class="explain demo" style="--rc:var(--op-${l.op})"><div class="eq">${step
+        .map((s, k) => `<span style="--i:${k}">${s}</span>`)
+        .join('')}</div></div>`;
+      return;
+    }
+    const [q, opts, right] = step.ask;
+    el.innerHTML = `<div class="ask"><div class="prob">${q}</div>
+      <div class="choices">${opts.map((o) => `<button class="choice" data-v="${o}">${o}</button>`).join('')}</div>
+      <div class="msg" aria-live="polite"></div></div>`;
+    const msg = el.querySelector('.msg');
+    el.querySelector('.choices').onclick = (e) => {
+      const btn = e.target.closest('.choice');
+      if (!btn) return;
+      if (btn.dataset.v === String(right)) {
+        btn.classList.add('right');
+        msg.className = 'msg ok';
+        msg.textContent = t('ln.ask_ok');
+      } else {
+        restartAnim(btn, 'wrong');
+        msg.className = 'msg bad';
+        msg.textContent = t('ln.ask_bad');
+      }
+    };
+  },
+});

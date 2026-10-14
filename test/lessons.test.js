@@ -57,14 +57,25 @@ test('lesson practice sets are game-ready, distinct and come with a tip', () => 
       assert.equal(new Set(qs.map((q) => q.text)).size, LESSON_QUESTIONS);
       for (const q of qs) {
         assert.equal(q.op, LESSONS[id].op);
-        assert.ok(checkAnswer(q, String(q.a * q.b)).correct);
-        assert.ok(q.tip.endsWith(String(q.a * q.b)), q.tip);
+        assert.ok(checkAnswer(q, q.answerText).correct);
+        assert.ok(q.tip.endsWith(q.answerText), q.tip);
       }
     }
   }
   // split: 2-digit × 1-digit, never a round number
   for (const q of lessonQuestions('split', mulberry32(7))) assert.ok(q.a >= 12 && q.a <= 98 && q.a % 10 && q.b >= 3 && q.b <= 9);
   assert.throws(() => lessonQuestions('nope'));
+});
+
+test('every lesson is ready, with captions for each step and a right answer in each ask', async () => {
+  globalThis.document ??= { documentElement: {} }; // setLang sets <html lang>
+  const { setLang, t, LANGS } = await import('../public/js/i18n.js');
+  assert.equal(READY.length, Object.keys(LESSONS).length);
+  for (const lang of Object.keys(LANGS)) {
+    setLang(lang);
+    for (const id of READY) assert.equal(t(`ln.${id}.steps`).length, LESSONS[id].steps, `${lang} ${id}`);
+  }
+  for (const l of Object.values(LESSONS)) for (const s of l.demo || []) if (s.ask) assert.ok(s.ask[1].includes(s.ask[2]), l.id);
 });
 
 const lessonSession = (lesson, n, ok = n) => ({
