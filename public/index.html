@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>MathMind – Mental Math Speed Trainer</title>
+  <meta name="description" content="Daily mental-math training: + − × ÷ against the clock with streaks, levels, achievements and a Daily Challenge.">
+  <meta name="theme-color" content="#fff8ec" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#182028" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="MathMind">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="preload" href="fonts/mali-600.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ HOME ============ -->
+  <section id="view-home" class="view tabview">
+    <header class="home-top">
+      <button class="mascot" id="home-mascot" data-pose="hello" data-i18n-aria="say_hi"></button>
+      <img class="avatar" id="home-avatar" alt="" hidden>
+      <div class="home-title">
+        <p class="greet" id="greet"></p>
+        <h1><span>Math</span><span>Mind</span></h1>
+      </div>
+      <button class="lvl-chip" id="lvl-chip" data-i18n-aria="lvl_chip"></button>
+    </header>
+
+    <div class="daily-card" id="daily-card">
+      <div class="daily-top">
+        <div class="streak-big">
+          <span class="flame" aria-hidden="true">🔥</span>
+          <div><b id="streak-num">0</b><small data-i18n="day_streak">day streak</small></div>
+        </div>
+        <div class="ring" data-i18n-aria="goal_ring" role="img" id="goal-ring">
+          <svg viewBox="0 0 64 64" aria-hidden="true">
+            <circle cx="32" cy="32" r="27" class="ring-bg"/>
+            <circle cx="32" cy="32" r="27" class="ring-fg" id="goal-ring-fg"/>
+          </svg>
+          <div class="ring-text"><b id="goal-num">0</b><small id="goal-of">/ 20</small></div>
+        </div>
+      </div>
+      <div class="week" id="week"></div>
+      <p class="daily-msg" id="daily-msg"></p>
+    </div>
+
+    <div class="xp-card">
+      <div class="xp-head"><b id="xp-level"></b><span id="xp-num"></span></div>
+      <div class="xp-bar"><i id="xp-fill"></i></div>
+    </div>
+
+    <h2 class="section-title" data-i18n="sec.play">Play</h2>
+    <div class="modes" id="modes">
+      <button class="mode m-daily" data-mode="daily">
+        <span class="mode-icon" aria-hidden="true">📅</span>
+        <span class="mode-text"><b data-i18n="mode.daily">Daily Challenge</b><small id="mode-daily-sub"></small></span>
+        <span class="mode-badge" id="mode-daily-badge">NEW</span>
+      </button>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="practice_set">Practice set</h2>
+      <div class="chips" id="op-chips" role="group" data-i18n-aria="ops_aria"></div>
+      <div class="seg" id="level-seg" role="radiogroup" data-i18n-aria="size_aria"></div>
+      <p class="hint" data-i18n="practice_hint"></p>
+      <div class="ptiles" id="practice-modes">
+        <div class="ptile m-sprint">
+          <button class="ptile-go" data-mode="sprint" aria-describedby="mode-sprint-sub">
+            <span class="mode-icon" aria-hidden="true">⏱️</span><b data-i18n="mode.sprint">Sprint</b>
+          </button>
+          <button class="len-pill" id="sprint-len"></button>
+          <small id="mode-sprint-sub"></small>
+        </div>
+        <div class="ptile m-endless">
+          <button class="ptile-go" data-mode="endless" aria-describedby="mode-endless-sub">
+            <span class="mode-icon" aria-hidden="true">♾️</span><b data-i18n="mode.endless">Endless</b>
+          </button>
+          <small id="mode-endless-sub"></small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROGRESS ============ -->
+  <section id="view-progress" class="view tabview" hidden>
+    <header class="topbar"><h1 data-i18n="tab.progress">Progress</h1></header>
+    <div class="grid" id="prog-bests"></div>
+
+    <div class="card">
+      <h2 data-i18n="activity">Activity</h2>
+      <p class="hint" id="heat-note"></p>
+      <div class="heat-wrap">
+        <div class="heat-days" id="heat-days" aria-hidden="true"></div>
+        <div class="heat" id="heat"></div>
+      </div>
+      <div class="heat-legend" aria-hidden="true"><span data-i18n="less">Less</span> <i class="h0"></i><i class="h1"></i><i class="h2"></i><i class="h3"></i><i class="h4"></i> <span data-i18n="more">More</span></div>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="skills">Skills</h2>
+      <div id="skills"></div>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="recent">Recent sessions</h2>
+      <div class="list" id="hist-list"></div>
+      <p class="empty" id="hist-empty" data-i18n="hist_empty" hidden></p>
+    </div>
+  </section>
+
+  <!-- ============ AWARDS ============ -->
+  <section id="view-awards" class="view tabview" hidden>
+    <header class="topbar"><h1 data-i18n="tab.awards">Awards</h1><span class="muted" id="aw-count"></span></header>
+    <div class="xp-bar big"><i id="aw-fill"></i></div>
+    <div class="awards" id="aw-grid"></div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section id="view-settings" class="view tabview" hidden>
+    <header class="topbar"><h1 data-i18n="tab.settings">Settings</h1></header>
+    <div class="card">
+      <h2 data-i18n="profile">Profile</h2>
+      <div class="profile">
+        <button class="avatar-pick" id="avatar-pick" data-i18n-aria="choose_avatar"><img class="avatar" id="set-avatar" alt="" hidden><span id="avatar-ph" aria-hidden="true">📷</span></button>
+        <input class="name-input" id="opt-name" type="text" maxlength="24" data-i18n-ph="your_name" autocomplete="nickname">
+      </div>
+      <button class="btn small" id="avatar-remove" data-i18n="remove_photo" hidden>Remove photo</button>
+      <input type="file" id="file-avatar" accept="image/*" hidden>
+    </div>
+    <div class="card">
+      <h2 data-i18n="language">Language</h2>
+      <select class="name-input" id="opt-lang" data-i18n-aria="language"></select>
+    </div>
+    <div class="card">
+      <h2><span data-i18n="daily_goal">Daily goal</span> <span class="h2-note" data-i18n="goal_note"></span></h2>
+      <div class="seg" id="goal-seg" role="radiogroup" data-i18n-aria="daily_goal"></div>
+      <p class="hint" data-i18n="goal_hint"></p>
+    </div>
+    <div class="card">
+      <h2 data-i18n="feedback">Feedback</h2>
+      <label class="toggle"><input type="checkbox" id="opt-sound"><span data-i18n="sound">Sound effects</span></label>
+      <label class="toggle"><input type="checkbox" id="opt-haptics"><span data-i18n="vibration">Vibration</span></label>
+      <label class="toggle"><input type="checkbox" id="opt-phonepad"><span data-i18n="phone_pad">Phone keypad (1-2-3 on top)</span></label>
+    </div>
+    <div class="card">
+      <h2 data-i18n="how_scoring">How scoring works</h2>
+      <ul class="rules">
+        <li data-i18n-html="rule1"></li>
+        <li data-i18n-html="rule2"></li>
+        <li data-i18n-html="rule3"></li>
+        <li data-i18n-html="rule4"></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2 data-i18n="your_data">Your data</h2>
+      <p class="hint" data-i18n="data_hint"></p>
+      <div class="row">
+        <button class="btn" id="btn-export" data-i18n="export">Export backup</button>
+        <button class="btn" id="btn-import" data-i18n="import">Import backup</button>
+      </div>
+      <input type="file" id="file-import" accept="application/json,.json" hidden>
+      <button class="btn danger-outline" id="btn-reset" data-i18n="reset">Reset all progress</button>
+    </div>
+    <button id="btn-install" class="btn primary" data-i18n="install" hidden>Install MathMind app</button>
+  </section>
+
+  <!-- ============ PLAY ============ -->
+  <section id="view-play" class="view play" hidden>
+    <header class="hud">
+      <button id="btn-stop" class="btn stop" data-i18n-aria="stop_aria"><span aria-hidden="true">■</span> <span data-i18n="stop">Stop</span></button>
+      <div class="hud-item"><small data-i18n="score">Score</small><b id="hud-score">0</b></div>
+      <div class="hud-item" id="hud-streak-item"><small data-i18n="streak">Streak</small><b id="hud-streak">0</b></div>
+      <div class="hud-item" id="hud-4-item"><small id="hud-4-label">Correct</small><b id="hud-4">0/0</b></div>
+    </header>
+    <div class="hud-bar" id="hud-bar" hidden><i id="hud-bar-fill"></i></div>
+
+    <main class="stage">
+      <div class="mascot" id="play-mascot" data-pose="idle" aria-hidden="true"></div>
+      <div class="qcard" id="qcard">
+        <div class="op-badge" id="op-badge" aria-hidden="true"></div>
+        <div class="timer" id="timer" aria-hidden="true">0.0s</div>
+        <div class="question" id="question" aria-live="off">–</div>
+        <div class="answer" id="answer" data-i18n-aria="answer_aria"><span id="answer-text"></span><i class="caret"></i></div>
+        <div class="qhint" id="qhint"></div>
+
+        <div class="countdown" id="countdown" hidden>
+          <small id="countdown-label"></small>
+          <b id="countdown-num">3</b>
+        </div>
+
+        <div class="result" id="result" hidden role="status" aria-live="assertive">
+          <div class="result-icon" id="result-icon"></div>
+          <div class="result-title" id="result-title"></div>
+          <div class="result-sub" id="result-sub"></div>
+          <div class="result-sub2" id="result-sub2"></div>
+          <div class="pause-bar"><i id="pause-bar"></i></div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="pad" id="pad" data-i18n-aria="pad_aria">
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+      <button data-k="back" class="fn" data-i18n-aria="backspace">⌫</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+      <button data-k="clear" class="fn" data-i18n-aria="clear">C</button>
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+      <button data-k="enter" class="enter" data-i18n-aria="submit">⏎</button>
+      <button data-k="0" class="zero">0</button><button data-k="." id="key-dot" data-i18n-aria="decimal">.</button>
+    </footer>
+  </section>
+
+  <!-- ============ SUMMARY ============ -->
+  <section id="view-summary" class="view" hidden>
+    <header class="hero compact">
+      <p class="mode-tag" id="sum-mode"></p>
+      <h1 id="sum-title" data-i18n="session_complete">Session complete</h1>
+      <p id="sum-badges" class="badges"></p>
+    </header>
+    <div class="scorebig"><small data-i18n="score">Score</small><b id="sum-score">0</b></div>
+
+    <div class="card reward">
+      <div class="reward-head"><b class="xp-gain" id="sum-xp">+0 XP</b><span id="sum-level"></span></div>
+      <div class="xp-bar"><i id="sum-xp-fill"></i></div>
+      <p class="levelup" id="sum-levelup" hidden></p>
+      <ul class="xp-lines" id="sum-xp-lines"></ul>
+      <div class="goal-line" id="sum-goal"></div>
+      <div class="xp-bar goal"><i id="sum-goal-fill"></i></div>
+    </div>
+
+    <div class="card" id="sum-ach" hidden>
+      <h2>Achievement unlocked</h2>
+      <div class="ach-new" id="sum-ach-list"></div>
+    </div>
+
+    <div class="grid" id="sum-grid"></div>
+    <div class="card"><h2 data-i18n="by_op">By operation</h2><div id="sum-ops"></div></div>
+    <div class="card" id="sum-miss-card" hidden><h2 data-i18n="review">Review mistakes</h2><ul class="miss" id="sum-miss"></ul></div>
+
+    <div class="actions">
+      <button id="sum-share" class="btn" data-i18n="share" hidden>Share result</button>
+      <button id="sum-again" class="btn primary big">Play again</button>
+      <button id="sum-home" class="btn" data-i18n="done">Done</button>
+    </div>
+  </section>
+
+  <!-- ============ TAB BAR ============ -->
+  <nav class="tabbar" id="tabbar" data-i18n-aria="nav">
+    <button data-tab="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg><span data-i18n="tab.home">Play</span></button>
+    <button data-tab="progress"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-6M21 20H3"/></svg><span data-i18n="tab.progress">Progress</span></button>
+    <button data-tab="awards"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg><span data-i18n="tab.awards">Awards</span></button>
+    <button data-tab="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span data-i18n="tab.settings">Settings</span></button>
+  </nav>
+
+</div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

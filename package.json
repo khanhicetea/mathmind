@@ -1,0 +1,13 @@
+{
+  "name": "mathmind",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "npm test && wrangler deploy",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "devDependencies": {
+    "wrangler": "^4.151.0"
+  }
+}

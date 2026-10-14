@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "mathmind",
+  "compatibility_date": "2026-10-14",
+  // Static-only app: no Worker script. Cloudflare serves ./public directly from its asset store,
+  // so requests never invoke (or bill) a Worker. Headers live in public/_headers.
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "404-page"
+  }
+}
