@@ -5,7 +5,12 @@ import {
   MODES,
   SPRINT_SECONDS,
   DAILY_QUESTIONS,
+  DAILY_DIFFS,
+  DAILY_DIFF_KEYS,
+  DEFAULT_DIFF,
+  dailyId,
   RESULT_PAUSE_MS,
+  SKIP_PENALTY,
   generate,
   dailyQuestions,
   checkAnswer,
@@ -53,10 +58,12 @@ const fmtDur = (ms) => {
 const sprintLabel = (sec) => (sec % 60 ? `${sec}s` : t('min', { n: sec / 60 }));
 const opName = (k) => t(`op.${k}`);
 const modeName = (m) => t(`mode.${m}`);
+const diffName = (d) => t(`diff.${DAILY_DIFFS[d] ? d : DEFAULT_DIFF}`);
 const titleName = (title) => t(`title.${title}`);
 const achText = (a) => t(`ach.${a.id}`).map((x) => x.replace(/\{q\}/g, DAILY_QUESTIONS));
 const modeLabel = (s) =>
-  (MODES[s.mode] ? modeName(s.mode) : '') + (s.mode === 'sprint' ? ` ${sprintLabel(s.sprintSec || 60)}` : '');
+  (MODES[s.mode] ? modeName(s.mode) : '') +
+  (s.mode === 'sprint' ? ` ${sprintLabel(s.sprintSec || 60)}` : s.mode === 'daily' ? ` · ${diffName(s.diff)}` : '');
 const stat = (label, value) => `<div class="stat"><small>${label}</small><b>${value}</b></div>`;
 const restartAnim = (el, cls) => {
   el.classList.remove(cls);
@@ -98,7 +105,7 @@ $('tabbar').addEventListener('click', (e) => {
   const b = e.target.closest('[data-tab]');
   if (b) go(b.dataset.tab);
 });
-$('lvl-chip').addEventListener('click', () => go('awards'));
+$('me-btn').addEventListener('click', () => go('awards'));
 
 /* ---------------- home ---------------- */
 function greeting() {
@@ -117,12 +124,11 @@ function renderHome() {
   const lv = levelInfo(state.xp);
 
   const name = state.settings.name;
-  $('greet').textContent = name ? t('greet.hi', { name }) : greeting();
+  $('greet').textContent = name || greeting();
   const avatar = state.settings.avatar;
   $('home-avatar').hidden = !avatar;
-  homeMascot.hidden = !!avatar;
+  $('home-avatar-ph').hidden = !!avatar;
   if (avatar) $('home-avatar').src = avatar;
-  $('lvl-chip').innerHTML = `<b>${lv.level}</b><span>${titleName(lv.title)}</span>`;
 
   // streak + goal ring
   $('daily-card').classList.toggle('lit', !!day.met);
@@ -154,12 +160,7 @@ function renderHome() {
   $('xp-fill').style.width = pct(lv.into, lv.need) + '%';
 
   // modes
-  const daily = state.daily[today];
-  $('mode-daily-sub').textContent = daily
-    ? t('daily_done', { c: daily.correct, q: DAILY_QUESTIONS, p: fmt(daily.score) })
-    : t('daily_new', { q: DAILY_QUESTIONS });
-  $('mode-daily-badge').textContent = daily ? '✓' : t('badge_new');
-  $('mode-daily-badge').classList.toggle('done', !!daily);
+  renderDailyMode();
   renderSprintMode();
   $('mode-endless-sub').textContent = state.records.combo
     ? t('endless_best', { n: state.records.combo })
@@ -171,6 +172,7 @@ function renderHome() {
     return `<button class="chip" data-op="${k}" aria-pressed="${on}"><b>${OPS[k].sym}</b><span>${opName(k)}</span></button>`;
   }).join('');
   $('level-seg').innerHTML = Object.entries(LEVELS)
+    .filter(([, l]) => !l.hidden)
     .map(
       ([k, l]) =>
         `<label><input type="radio" name="level" value="${k}" ${state.settings.level === k ? 'checked' : ''}><span>${t(`lv.${k}`)}</span></label>`,
@@ -183,6 +185,21 @@ function renderHome() {
   } catch {
     /* unsupported */
   }
+}
+
+function renderDailyMode() {
+  const today = dayKey();
+  const diff = state.settings.dailyDiff;
+  const daily = state.daily[dailyId(today, diff)];
+  $('mode-daily-sub').textContent = daily
+    ? t('daily_done', { c: daily.correct, q: DAILY_QUESTIONS, p: fmt(daily.score) })
+    : t('daily_new', { q: DAILY_QUESTIONS, d: t(`lv.${DAILY_DIFFS[diff].level}`) });
+  $('mode-daily-badge').textContent = daily ? '✓' : t('badge_new');
+  $('mode-daily-badge').classList.toggle('done', !!daily);
+  $('daily-diff').innerHTML = DAILY_DIFF_KEYS.map(
+    (k) =>
+      `<button class="diff-pill" data-diff="${k}" aria-pressed="${k === diff}">${diffName(k)}${state.daily[dailyId(today, k)] ? ' <span aria-hidden="true">✓</span>' : ''}</button>`,
+  ).join('');
 }
 
 function renderSprintMode() {
@@ -200,6 +217,14 @@ for (const el of [$('modes'), $('practice-modes')]) {
     if (b) startGame(b.dataset.mode);
   });
 }
+$('daily-diff').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-diff]');
+  if (!b || b.dataset.diff === state.settings.dailyDiff) return;
+  state.settings.dailyDiff = b.dataset.diff;
+  store.save(state);
+  renderDailyMode();
+  fx.haptic(10);
+});
 $('op-chips').addEventListener('click', (e) => {
   const chip = e.target.closest('.chip');
   if (!chip) return;
@@ -235,7 +260,7 @@ function renderProgress() {
     stat(t('st.day_streak'), `🔥 ${dayStreak(state.days)}`) +
     stat(t('st.longest'), t('days', { n: r.bestDayStreak })) +
     SPRINT_SECONDS.map((sec) => stat(t('st.sprint_best', { len: sprintLabel(sec) }), fmt(r.score[`sprint${sec}`]))).join('') +
-    stat(t('st.daily_best'), fmt(r.score.daily)) +
+    DAILY_DIFF_KEYS.map((d) => stat(t('st.daily_best', { d: diffName(d) }), fmt(r.score[`daily_${d}`]))).join('') +
     stat(t('st.best_combo'), `⚡ ${r.combo}`) +
     stat(t('st.best_avg'), r.avgMs != null ? secs(r.avgMs) : '–') +
     stat(t('st.correct_answers'), fmt(ctx.correct)) +
@@ -466,14 +491,16 @@ function startGame(mode, opts = {}) {
   clearTimeout(nextTimer);
   cancelAnimationFrame(tickId);
   const today = dayKey();
+  const diff = mode === 'daily' ? opts.diff || state.settings.dailyDiff : null;
   game = {
     mode,
     ops: mode === 'daily' ? [...OP_KEYS] : opts.ops || state.settings.ops,
     focus: opts.ops?.length === 1 ? opts.ops[0] : null,
-    level: mode === 'daily' ? 'd23' : state.settings.level,
+    level: mode === 'daily' ? DAILY_DIFFS[diff].level : state.settings.level,
     dailyKey: mode === 'daily' ? today : null,
+    diff,
     sprintSec: mode === 'sprint' ? state.settings.sprintSec : null,
-    queue: mode === 'daily' ? dailyQuestions(today) : null,
+    queue: mode === 'daily' ? dailyQuestions(today, diff) : null,
     startedAt: Date.now(),
     log: [],
     mistakes: [],
@@ -489,7 +516,7 @@ function startGame(mode, opts = {}) {
     hiddenTotal: 0,
     timeUp: false,
   };
-  lastPlay = { mode, opts };
+  lastPlay = { mode, opts: diff ? { ...opts, diff } : opts }; // a retry replays the same difficulty
 
   $('hud-4-label').textContent = t({ endless: 'st.correct', sprint: 'time', daily: 'question' }[mode]);
   $('hud-bar').hidden = mode === 'endless';
@@ -538,6 +565,8 @@ function countdown() {
   step();
 }
 
+const SKIP_AFTER_MS = { daily: 10_000, endless: 20_000, sprint: 1_000 };
+
 function nextQuestion() {
   let q;
   if (game.queue) q = game.queue[game.log.length];
@@ -560,9 +589,11 @@ function nextQuestion() {
   $('question').innerHTML = `${q.a} <span class="op">${q.sym}</span> ${q.b}`;
   restartAnim($('question'), 'enter');
   pose(playMascot, 'think');
-  $('qhint').textContent = q.op === 'div' ? t('div_hint') : '';
-  $('key-dot').disabled = q.op !== 'div';
+  const decimal = q.op === 'div' && !q.whole;
+  $('qhint').textContent = decimal ? t('div_hint') : '';
+  $('key-dot').disabled = !decimal;
   renderAnswer();
+  $('btn-skip').hidden = true;
   $('timer').textContent = '0.0s';
   lastShown = '0.0s';
   game.qStart = performance.now();
@@ -586,6 +617,7 @@ function tick() {
     $('timer').textContent = t;
     lastShown = t;
   }
+  if (ms >= SKIP_AFTER_MS[game.mode]) $('btn-skip').hidden = false;
   let hurry = ms > game.q.par * 1000; // past par: the speed bonus is draining away
   if (game.mode === 'sprint') {
     const left = game.sprintSec * 1000 - game.usedMs - ms;
@@ -648,7 +680,7 @@ function renderAnswer() {
 function updateHud() {
   const { log, streak, score, mode } = game;
   const correct = log.filter((e) => e.correct).length;
-  $('hud-score').textContent = fmt(score);
+  $('hud-score').textContent = fmt(Math.max(0, score));
   const mult = streak > 1 ? `<span class="mult">×${(1 + 0.1 * Math.min(streak - 1, 10)).toFixed(1)}</span>` : '';
   $('hud-streak').innerHTML = streak ? `🔥${streak}${mult}` : '0';
   $('hud-streak-item').classList.toggle('flame', streak >= 3);
@@ -674,7 +706,7 @@ function press(key) {
   if (key === 'back') s = s.slice(0, -1);
   else if (key === 'clear') s = '';
   else if (key === '.') {
-    if (game.q.op !== 'div' || s.includes('.')) return;
+    if (game.q.op !== 'div' || game.q.whole || s.includes('.')) return;
     s = s === '' ? '0.' : s + '.';
   } else if (/^\d$/.test(key)) {
     const dot = s.indexOf('.');
@@ -698,6 +730,7 @@ function submit() {
 
   const ms = Math.round(elapsed());
   game.locked = true;
+  $('btn-skip').hidden = true;
   game.usedMs += ms;
   cancelAnimationFrame(tickId);
   $('timer').textContent = secs(ms);
@@ -723,6 +756,10 @@ function submit() {
   showResult(verdict.correct, ms, sc, q, milestone);
   if (milestone) fx.confetti({ y: 0.32, count: Math.min(30 + game.streak * 3, 140), power: 0.75 });
 
+  scheduleNext();
+}
+
+function scheduleNext() {
   const token = game;
   clearTimeout(nextTimer);
   nextTimer = setTimeout(() => {
@@ -734,6 +771,40 @@ function submit() {
     else nextQuestion();
   }, RESULT_PAUSE_MS);
 }
+
+function skip() {
+  if (!game || game.locked || $('btn-skip').hidden) return;
+  const { q } = game;
+  const ms = Math.round(elapsed());
+  game.locked = true;
+  $('btn-skip').hidden = true;
+  game.usedMs += ms;
+  cancelAnimationFrame(tickId);
+  $('timer').textContent = secs(ms);
+  $('pad').classList.add('locked');
+
+  game.streak = 0;
+  game.score -= SKIP_PENALTY;
+  game.mistakes.push({ text: q.text, given: '', answer: q.answerText });
+  game.log.push({ op: q.op, correct: false, skipped: true, ms, points: -SKIP_PENALTY });
+  store.savePending(snapshot(game));
+  updateHud();
+
+  fx.sound('bad');
+  fx.haptic(40);
+  qcard.classList.add('bad');
+  qcard.classList.remove('ok');
+  $('result-icon').textContent = '⏭';
+  pose(playMascot, 'oops');
+  $('result-title').textContent = `${q.text} = ${q.answerText}`;
+  $('result-sub').textContent = t('skip_pen', { n: SKIP_PENALTY });
+  $('result-sub2').textContent = '';
+  $('result-sub2').className = 'result-sub2';
+  runPauseBar();
+  $('result').hidden = false;
+  scheduleNext();
+}
+$('btn-skip').addEventListener('click', skip);
 
 function showResult(ok, ms, sc, q, milestone) {
   qcard.classList.toggle('ok', ok);
@@ -774,6 +845,7 @@ const snapshot = (g) => ({
   ops: g.ops,
   level: g.level,
   dailyKey: g.dailyKey,
+  diff: g.diff,
   sprintSec: g.sprintSec,
   startedAt: g.startedAt,
   log: g.log,
@@ -789,6 +861,7 @@ function buildSession(g, endTs) {
     ops: [...g.ops],
     level: g.level,
     dailyKey: g.dailyKey,
+    ...(g.diff && { diff: g.diff }),
     ...(g.sprintSec && { sprintSec: g.sprintSec }),
     quick: g.log.some((e) => e.correct && (e.op === 'mul' || e.op === 'div') && e.ms < 3000),
     ...summarize(g.log),
@@ -944,7 +1017,7 @@ function renderSummary(s, g, res) {
   $('sum-ops').innerHTML = opBreakdown(s.byOp);
   $('sum-miss-card').hidden = !g.mistakes.length;
   $('sum-miss').innerHTML = g.mistakes
-    .map((m) => `<li><span>${m.text} = <b>${m.answer}</b></span><s>${m.given}</s></li>`)
+    .map((m) => `<li><span>${m.text} = <b>${m.answer}</b></span><s>${m.given || '—'}</s></li>`)
     .join('');
 
   $('sum-again').textContent = t(mode === 'daily' ? 'retry_challenge' : mode === 'sprint' ? 'sprint_again' : 'play_again');
@@ -953,7 +1026,7 @@ function renderSummary(s, g, res) {
     const rows = [];
     for (let i = 0; i < g.log.length; i += 5) rows.push(g.log.slice(i, i + 5).map((e) => (e.correct ? '🟩' : '🟥')).join(''));
     lastShare = [
-      `MathMind Daily ${s.dailyKey}`,
+      `MathMind Daily ${s.dailyKey} ${DAILY_DIFFS[s.diff || DEFAULT_DIFF].icon} ${DAILY_DIFFS[s.diff || DEFAULT_DIFF].label}`,
       `${s.correct}/${s.total} · ${fmt(s.score)} pts · ${secs(s.answerMs)}`,
       ...rows,
       res.dayStreak ? `🔥 ${t('streak_n', { n: res.dayStreak })}` : '',

@@ -7,7 +7,7 @@ A static, installable (PWA) mental-math trainer built to be played **a few minut
 
 | Mode | What it is |
 | --- | --- |
-| 📅 **Daily Challenge** | 15 questions (all four ops, 2–3 digits), seeded by the date, so everyone gets the same set each day. The first completed attempt is your official result (+250 XP); retries are for practice. Shareable Wordle-style result (🟩🟥). |
+| 📅 **Daily Challenge** | 15 questions (all four ops) in three difficulties picked right on the card — 🟢 Easy (1–2 digits, whole-number ÷, +150 XP), 🟡 Medium (2–3 digits, +250 XP), 🔴 Hard (3 digits, +400 XP). Each difficulty is seeded by the date, so everyone gets the same set each day. The first completed attempt per difficulty is your official result; retries are for practice. Shareable Wordle-style result (🟩🟥). |
 | ⏱️ **Sprint** | As many as you can in 1, 3 or 5 minutes of answering time (the 1s result pause doesn't eat your clock). 3-2-1 countdown. Each length keeps its own best score. |
 | ♾️ **Endless** | Relaxed practice until you press **Stop**, using your chosen operations and number size. |
 
@@ -17,7 +17,7 @@ Every answer gets a 1-second result screen; a correct answer submits the instant
 
 - **Daily goal** (10/20/30/50 correct answers, default 20) with a progress ring, plus a **day streak** that grows each day you hit it.
   It stays alive until the end of today, and a 7-day strip shows the week.
-- **XP & levels:** points become XP; +250 XP bonuses for the daily goal and the Daily Challenge. Titles go from Beginner to Grandmaster.
+- **XP & levels:** points become XP; +250 XP for the daily goal and +150/+250/+400 XP for the Daily Challenge (by difficulty). Titles go from Beginner to Grandmaster.
 - **23 achievements:** streaks, combos, Sprint marks, Daily Challenge, lifetime answers, levels, plus a few fun ones (Night Owl, Quick Draw…). Locked ones show progress.
 - **In-game juice:** combo multiplier in the HUD, a score pop, 🔥 milestone every 5 in a row with confetti, plus sounds and haptics (each can be turned off).
 - **Progress tab:** records, a 17-week activity heatmap, per-operation **skills** (accuracy and speed) with the weakest op flagged

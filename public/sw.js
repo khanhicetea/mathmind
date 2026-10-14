@@ -1,5 +1,5 @@
 // Offline-first app shell. Bump VERSION when files are added to / removed from SHELL.
-const VERSION = 'mathmind-v6';
+const VERSION = 'mathmind-v7';
 const SHELL = [
   './',
   'css/style.css',

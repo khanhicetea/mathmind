@@ -1,5 +1,5 @@
 // Persistence (localStorage) with an in-memory fallback if storage is blocked.
-import { OP_KEYS, SPRINT_SECONDS } from './engine.js';
+import { OP_KEYS, SPRINT_SECONDS, DAILY_DIFFS, DEFAULT_DIFF, dailyId } from './engine.js';
 import { emptyProgress, applySession } from './progress.js';
 
 const KEY = 'mathmind.v2';
@@ -10,7 +10,7 @@ const MAX_SESSIONS = 300;
 export function defaults() {
   return {
     v: 2,
-    settings: { ops: [...OP_KEYS], level: 'd23', sprintSec: 60, sound: true, haptics: true, phonePad: false, goal: 20, name: '', avatar: '', lang: '' },
+    settings: { ops: [...OP_KEYS], level: 'd23', sprintSec: 60, dailyDiff: DEFAULT_DIFF, sound: true, haptics: true, phonePad: false, goal: 20, name: '', avatar: '', lang: '' },
     history: [],
     ...emptyProgress(),
   };
@@ -33,7 +33,19 @@ export function hydrate(obj) {
     score.sprint60 = Math.max(score.sprint60 || 0, score.sprint || 0);
     delete score.sprint;
   }
+  // likewise the Daily Challenge: it was one medium set per date, with its best under 'daily'
+  if ('daily' in score) {
+    score.daily_medium = Math.max(score.daily_medium || 0, score.daily || 0);
+    delete score.daily;
+  }
+  for (const k of Object.keys(st.daily)) {
+    if (!k.includes(':')) {
+      st.daily[dailyId(k)] = st.daily[k];
+      delete st.daily[k];
+    }
+  }
   if (!SPRINT_SECONDS.includes(st.settings.sprintSec)) st.settings.sprintSec = 60;
+  if (!(st.settings.dailyDiff in DAILY_DIFFS)) st.settings.dailyDiff = DEFAULT_DIFF;
   return st;
 }
 

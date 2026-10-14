@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { dailyQuestions, summarize, DAILY_QUESTIONS } from '../public/js/engine.js';
+import { dailyQuestions, summarize, dailyId, DAILY_QUESTIONS, DAILY_DIFFS, DAILY_DIFF_KEYS } from '../public/js/engine.js';
 import {
   dayKey,
   addDays,
@@ -11,7 +11,6 @@ import {
   applySession,
   skillStats,
   GOAL_BONUS_XP,
-  DAILY_BONUS_XP,
 } from '../public/js/progress.js';
 import { defaults, hydrate, migrateV1 } from '../public/js/store.js';
 
@@ -85,20 +84,38 @@ test('applySession: "new best" flags only when beating a previous best', () => {
 test('applySession: daily challenge — first completed attempt is official', () => {
   const st = defaults();
   const key = '2026-10-14';
+  const id = dailyId(key, 'medium');
+  const daily = { mode: 'daily', dailyKey: key, diff: 'medium' };
   // stopped early: not a completion
-  let res = applySession(st, session(key, answers(5), { mode: 'daily', dailyKey: key }));
-  assert.equal(st.daily[key], undefined);
-  res = applySession(st, session(key, answers(DAILY_QUESTIONS), { mode: 'daily', dailyKey: key }));
-  assert.ok(res.bonuses.some((b) => b.xp === DAILY_BONUS_XP));
+  let res = applySession(st, session(key, answers(5), daily));
+  assert.equal(st.daily[id], undefined);
+  res = applySession(st, session(key, answers(DAILY_QUESTIONS), daily));
+  assert.ok(res.bonuses.some((b) => b.xp === DAILY_DIFFS.medium.bonusXp));
   assert.equal(st.records.dailyCount, 1);
   assert.equal(st.records.dailyPerfect, 1);
   assert.equal(st.days[key].dailyDone, true);
-  const official = st.daily[key].score;
-  res = applySession(st, session(key, answers(DAILY_QUESTIONS), { mode: 'daily', dailyKey: key }));
+  const official = st.daily[id].score;
+  res = applySession(st, session(key, answers(DAILY_QUESTIONS), daily));
   assert.equal(res.dailyRetry, true);
-  assert.equal(st.daily[key].attempts, 2);
-  assert.equal(st.daily[key].score, official);
+  assert.equal(st.daily[id].attempts, 2);
+  assert.equal(st.daily[id].score, official);
   assert.equal(st.records.dailyCount, 1);
+});
+
+test('applySession: each daily difficulty has its own result, best score and bonus', () => {
+  const st = defaults();
+  const key = '2026-10-14';
+  for (const diff of DAILY_DIFF_KEYS) {
+    const res = applySession(st, session(key, answers(DAILY_QUESTIONS), { mode: 'daily', dailyKey: key, diff }));
+    assert.equal(res.dailyRetry, false, diff);
+    assert.ok(res.bonuses.some((b) => b.id === 'daily' && b.xp === DAILY_DIFFS[diff].bonusXp), diff);
+    assert.ok(st.records.score[`daily_${diff}`] > 0, diff);
+  }
+  assert.deepEqual(Object.keys(st.daily).sort(), DAILY_DIFF_KEYS.map((d) => dailyId(key, d)).sort());
+  assert.equal(st.records.dailyCount, 3);
+  // a session saved before difficulties existed counts as medium
+  const old = applySession(defaults(), session(key, answers(DAILY_QUESTIONS), { mode: 'daily', dailyKey: key }));
+  assert.ok(old.bonuses.some((b) => b.xp === DAILY_DIFFS.medium.bonusXp));
 });
 
 test('achievements unlock once, with progress and one-off feats', () => {
@@ -128,6 +145,38 @@ test('heatmap is Monday-aligned and marks future days', () => {
   const today = cells.find((c) => c.today);
   assert.equal(today.level, 4);
   assert.equal(cells.filter((c) => c.future).length, 4); // Thu..Sun
+});
+
+test('daily questions: each difficulty is its own deterministic, suitably hard set', () => {
+  const key = '2026-10-14';
+  const texts = (d) => dailyQuestions(key, d).map((q) => q.text);
+  const sets = DAILY_DIFF_KEYS.map(texts);
+  assert.notDeepEqual(sets[0], sets[1]);
+  assert.notDeepEqual(sets[1], sets[2]);
+  for (const d of DAILY_DIFF_KEYS) assert.deepEqual(texts(d), texts(d), d);
+
+  const digits = (n) => String(n).length;
+  const maxDigits = (d) => Math.max(...dailyQuestions(key, d).flatMap((q) => [digits(q.a), digits(q.b)]));
+  assert.ok(maxDigits('easy') <= 2);
+  assert.equal(maxDigits('hard'), 3);
+  for (const q of dailyQuestions(key, 'hard')) assert.ok(digits(q.a) === 3 && (digits(q.b) === 3 || q.op === 'mul'), q.text);
+  for (const k of ['2026-10-14', '2026-10-15', '2026-10-16', '2026-10-17']) {
+    for (const q of dailyQuestions(k, 'easy')) {
+      assert.ok(q.a > 1 && q.b > 1, q.text);
+      if (q.op === 'mul') assert.ok(digits(q.a) + digits(q.b) <= 3, q.text);
+      if (q.op === 'div') {
+        assert.equal(q.a % q.b, 0, q.text);
+        assert.ok(q.whole && !q.answerText.includes('.'), q.text);
+      }
+    }
+  }
+});
+
+test('medium daily set is unchanged from before difficulties existed', () => {
+  assert.deepEqual(
+    dailyQuestions('2026-10-14', 'medium').map((q) => q.text),
+    dailyQuestions('2026-10-14').map((q) => q.text),
+  );
 });
 
 test('daily questions are deterministic per date and balanced', () => {
@@ -179,7 +228,16 @@ test('each Sprint length keeps its own best; achievements only count 1 min sprin
 });
 
 test('hydrate moves the old single Sprint best to the 1 min bucket', () => {
-  const st = hydrate({ v: 2, settings: { sprintSec: 999 }, records: { score: { sprint: 900, daily: 50 } } });
-  assert.deepEqual(st.records.score, { sprint60: 900, daily: 50 });
+  const st = hydrate({ v: 2, settings: { sprintSec: 999 }, records: { score: { sprint: 900 } } });
+  assert.deepEqual(st.records.score, { sprint60: 900 });
   assert.equal(st.settings.sprintSec, 60);
+});
+
+test('hydrate files pre-difficulty Daily Challenge data under medium', () => {
+  const old = { v: 2, settings: { dailyDiff: 'nope' }, daily: { '2026-10-13': { score: 1, correct: 15, attempts: 1, best: 1 } }, records: { score: { daily: 50 } } };
+  const st = hydrate(old);
+  assert.deepEqual(Object.keys(st.daily), ['2026-10-13:medium']);
+  assert.deepEqual(st.records.score, { daily_medium: 50 });
+  assert.equal(st.settings.dailyDiff, 'medium');
+  assert.equal(hydrate({ v: 2, settings: { dailyDiff: 'hard' } }).settings.dailyDiff, 'hard');
 });

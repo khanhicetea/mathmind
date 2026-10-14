@@ -1,17 +1,16 @@
 // Pure progression logic: days & streaks, XP & levels, achievements, skills.
 // Operates on the plain `state` object; persistence lives in store.js.
-import { OPS, OP_KEYS, DAILY_QUESTIONS } from './engine.js';
+import { OPS, OP_KEYS, DAILY_QUESTIONS, DAILY_DIFFS, DEFAULT_DIFF, dailyId } from './engine.js';
 
 export const GOAL_OPTIONS = [10, 20, 30, 50];
 export const GOAL_BONUS_XP = 250;
-export const DAILY_BONUS_XP = 250;
 
 export function emptyProgress() {
   return {
     xp: 0,
     days: {}, // 'YYYY-MM-DD' -> { correct, total, xp, sessions, met, dailyDone }
     ops: {}, // lifetime per-op { n, c, ms }
-    daily: {}, // 'YYYY-MM-DD' -> first completed Daily Challenge { score, correct, ms, attempts, best }
+    daily: {}, // dailyId() 'YYYY-MM-DD:easy|medium|hard' -> first completed Daily Challenge { score, correct, ms, attempts, best }
     achievements: {}, // id -> unlocked timestamp
     records: {
       sessions: 0,
@@ -22,13 +21,14 @@ export function emptyProgress() {
       dailyCount: 0,
       dailyPerfect: 0,
       avgMs: null,
-      score: {}, // per scoreKey(): 'daily', 'endless', 'sprint60', 'sprint180', 'sprint300'
+      score: {}, // per scoreKey(): 'daily_easy', 'daily_medium', 'daily_hard', 'endless', 'sprint60', 'sprint180', 'sprint300'
     },
   };
 }
 
-/** Best-score bucket: each Sprint length keeps its own record (old sessions were all 60s). */
-export const scoreKey = (s) => (s.mode === 'sprint' ? `sprint${s.sprintSec || 60}` : s.mode);
+/** Best-score bucket: each Sprint length / Daily difficulty keeps its own record (old sessions were all 60s / medium). */
+export const scoreKey = (s) =>
+  s.mode === 'sprint' ? `sprint${s.sprintSec || 60}` : s.mode === 'daily' ? `daily_${s.diff || DEFAULT_DIFF}` : s.mode;
 
 /* ---------------- days ---------------- */
 const pad2 = (n) => String(n).padStart(2, '0');
@@ -196,17 +196,18 @@ export function applySession(state, s) {
   // Daily Challenge: the first *completed* attempt of the day is the official result.
   let dailyRetry = false;
   if (s.mode === 'daily' && s.total >= DAILY_QUESTIONS) {
-    const prev = state.daily[s.dailyKey];
+    const id = dailyId(s.dailyKey, s.diff);
+    const prev = state.daily[id];
     if (prev) {
       dailyRetry = true;
       prev.attempts++;
       prev.best = Math.max(prev.best, s.score);
     } else {
-      state.daily[s.dailyKey] = { score: s.score, correct: s.correct, ms: s.answerMs, attempts: 1, best: s.score };
+      state.daily[id] = { score: s.score, correct: s.correct, ms: s.answerMs, attempts: 1, best: s.score };
       day.dailyDone = true;
       r.dailyCount++;
       if (s.correct === s.total) r.dailyPerfect++;
-      bonuses.push({ id: 'daily', label: 'Daily Challenge', xp: DAILY_BONUS_XP });
+      bonuses.push({ id: 'daily', label: 'Daily Challenge', xp: DAILY_DIFFS[s.diff || DEFAULT_DIFF].bonusXp });
     }
   }
 

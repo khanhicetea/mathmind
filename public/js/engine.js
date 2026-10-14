@@ -11,6 +11,7 @@ export const OP_KEYS = Object.keys(OPS);
 
 // `digits` is the pool of digit-counts an operand is drawn from.
 export const LEVELS = {
+  d12: { label: '1–2 digits', digits: [1, 2], hidden: true }, // Daily Challenge "easy" only
   d2: { label: '2 digits', digits: [2] },
   d23: { label: '2–3 digits', digits: [2, 3] },
   d3: { label: '3 digits', digits: [3] },
@@ -22,9 +23,21 @@ export const MODES = {
   endless: { label: 'Endless', icon: '♾️' },
 };
 export const DAILY_QUESTIONS = 15;
+// Each difficulty is its own fixed set per date. `exactDiv`: ÷ always divides evenly;
+// `mulDigits`: max digits of both factors together (default 5, i.e. never 3×3).
+export const DAILY_DIFFS = {
+  easy: { label: 'Easy', icon: '🟢', level: 'd12', exactDiv: true, mulDigits: 3, bonusXp: 150 },
+  medium: { label: 'Medium', icon: '🟡', level: 'd23', bonusXp: 250 },
+  hard: { label: 'Hard', icon: '🔴', level: 'd3', bonusXp: 400 },
+};
+export const DAILY_DIFF_KEYS = Object.keys(DAILY_DIFFS);
+export const DEFAULT_DIFF = 'medium';
+/** Key of one date + difficulty, e.g. "2026-10-14:hard" (store.daily is indexed by it). */
+export const dailyId = (date, diff = DEFAULT_DIFF) => `${date}:${diff}`;
 export const SPRINT_SECONDS = [60, 180, 300];
 export const sprintLabel = (sec) => (sec % 60 ? `${sec}s` : `${sec / 60} min`);
 export const RESULT_PAUSE_MS = 1000;
+export const SKIP_PENALTY = 50;
 
 /** Small seeded PRNG so the Daily Challenge is identical for everyone on a given date. */
 export function mulberry32(seed) {
@@ -42,9 +55,11 @@ export function hashString(s) {
   return h >>> 0;
 }
 
-/** The fixed question set for a date key ("YYYY-MM-DD"): balanced ops, 2–3 digits. */
-export function dailyQuestions(key, n = DAILY_QUESTIONS) {
-  const rng = mulberry32(hashString(`mathmind:${key}`));
+/** The fixed question set for a date key ("YYYY-MM-DD") and difficulty: balanced ops. */
+export function dailyQuestions(key, diff = DEFAULT_DIFF, n = DAILY_QUESTIONS) {
+  const cfg = DAILY_DIFFS[diff];
+  // medium keeps the original seed, so its sets are unchanged from before difficulties existed
+  const rng = mulberry32(hashString(`mathmind:${diff === DEFAULT_DIFF ? key : `${key}:${diff}`}`));
   const ops = Array.from({ length: n }, (_, i) => OP_KEYS[i % OP_KEYS.length]);
   for (let i = ops.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
@@ -53,14 +68,14 @@ export function dailyQuestions(key, n = DAILY_QUESTIONS) {
   const seen = new Set();
   return ops.map((op) => {
     let q;
-    do q = generate(op, 'd23', rng);
+    do q = generate(op, cfg.level, rng, cfg);
     while (seen.has(q.text));
     seen.add(q.text);
     return q;
   });
 }
 
-const range = (d) => [10 ** (d - 1), 10 ** d - 1];
+const range = (d) => (d === 1 ? [2, 9] : [10 ** (d - 1), 10 ** d - 1]); // no ×1 / ÷1 freebies
 const randInt = (min, max, rng) => min + Math.floor(rng() * (max - min + 1));
 const digitCount = (n) => String(n).length;
 
@@ -68,8 +83,9 @@ const digitCount = (n) => String(n).length;
  * Build a question. Every question carries `tenths` (the answer × 10 as an
  * integer) so checking never depends on floating point.
  * Division answers are rounded half-up to 1 decimal.
+ * `opts.exactDiv` makes every division come out even; `opts.mulDigits` caps a × question's total digits.
  */
-export function generate(op, level, rng = Math.random) {
+export function generate(op, level, rng = Math.random, opts = {}) {
   const pool = LEVELS[level].digits;
   const pick = () => pool[Math.floor(rng() * pool.length)];
   const num = (d) => randInt(...range(d), rng);
@@ -94,7 +110,7 @@ export function generate(op, level, rng = Math.random) {
     case 'mul': {
       const da = pick();
       let db = pick();
-      if (da === 3 && db === 3) db = 2; // 3×3 digits is not a mental-math exercise
+      if (da + db > (opts.mulDigits ?? 5)) db = (opts.mulDigits ?? 5) - da; // 3×3 digits is not a mental-math exercise
       a = num(da);
       b = num(db);
       tenths = a * b * 10;
@@ -103,18 +119,19 @@ export function generate(op, level, rng = Math.random) {
     case 'div': {
       const da = pick();
       const db = pick();
-      let exact = false;
-      if (rng() < 0.35) {
-        // exact quotient (>= 2) so decimals aren't *always* required
+      // exact quotient (>= 2): a = b × k with `a` of the given digit count, if one exists
+      const tryExact = (da, db) => {
         const [lo, hi] = range(da);
         b = num(db);
         const kMin = Math.max(2, Math.ceil(lo / b));
         const kMax = Math.floor(hi / b);
-        if (kMin <= kMax) {
-          a = b * randInt(kMin, kMax, rng);
-          exact = true;
-        }
-      }
+        if (kMin > kMax) return false;
+        a = b * randInt(kMin, kMax, rng);
+        return true;
+      };
+      let exact = false;
+      if (opts.exactDiv) for (let i = 0; !exact && i < 50; i++) exact = tryExact(pick(), pick());
+      else exact = rng() < 0.35 && tryExact(da, db); // so decimals aren't *always* required
       if (!exact) {
         do {
           a = num(da);
@@ -129,6 +146,7 @@ export function generate(op, level, rng = Math.random) {
       throw new Error(`unknown op: ${op}`);
   }
 
+  const whole = op === 'div' && !!opts.exactDiv && tenths % 10 === 0; // answer is an integer: no decimal input
   const par = (OPS[op].par * (digitCount(a) + digitCount(b))) / 4;
   return {
     op,
@@ -137,7 +155,8 @@ export function generate(op, level, rng = Math.random) {
     sym: OPS[op].sym,
     text: `${a} ${OPS[op].sym} ${b}`,
     tenths,
-    answerText: formatTenths(tenths, op === 'div'),
+    answerText: formatTenths(tenths, op === 'div' && !whole),
+    whole,
     par,
   };
 }
@@ -197,12 +216,13 @@ export function summarize(log) {
       if (fastestMs === null || e.ms < fastestMs) fastestMs = e.ms;
     } else {
       streak = 0;
+      score += e.points || 0; // skip penalty (negative)
     }
   }
   return {
     total: log.length,
     correct,
-    score,
+    score: Math.max(0, score),
     bestStreak,
     fastestMs,
     answerMs,

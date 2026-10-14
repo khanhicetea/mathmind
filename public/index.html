@@ -25,12 +25,12 @@
   <section id="view-home" class="view tabview">
     <header class="home-top">
       <button class="mascot" id="home-mascot" data-pose="hello" data-i18n-aria="say_hi"></button>
-      <img class="avatar" id="home-avatar" alt="" hidden>
-      <div class="home-title">
-        <p class="greet" id="greet"></p>
-        <h1><span>Math</span><span>Mind</span></h1>
-      </div>
-      <button class="lvl-chip" id="lvl-chip" data-i18n-aria="lvl_chip"></button>
+      <h1 class="logo" aria-label="MathMind"><span>Math</span><span>Mind</span></h1>
+      <button class="me" id="me-btn" data-i18n-aria="lvl_chip">
+        <img class="avatar" id="home-avatar" alt="" hidden>
+        <span class="avatar avatar-ph" id="home-avatar-ph" aria-hidden="true">🙂</span>
+        <span class="greet" id="greet"></span>
+      </button>
     </header>
 
     <div class="daily-card" id="daily-card">
@@ -56,13 +56,15 @@
       <div class="xp-bar"><i id="xp-fill"></i></div>
     </div>
 
-    <h2 class="section-title" data-i18n="sec.play">Play</h2>
     <div class="modes" id="modes">
-      <button class="mode m-daily" data-mode="daily">
-        <span class="mode-icon" aria-hidden="true">📅</span>
-        <span class="mode-text"><b data-i18n="mode.daily">Daily Challenge</b><small id="mode-daily-sub"></small></span>
-        <span class="mode-badge" id="mode-daily-badge">NEW</span>
-      </button>
+      <div class="mode m-daily">
+        <button class="mode-go-area" data-mode="daily" aria-describedby="mode-daily-sub">
+          <span class="mode-icon" aria-hidden="true">📅</span>
+          <span class="mode-text"><b data-i18n="mode.daily">Daily Challenge</b><small id="mode-daily-sub"></small></span>
+          <span class="mode-badge" id="mode-daily-badge">NEW</span>
+        </button>
+        <div class="diff-pills" id="daily-diff" role="group" data-i18n-aria="diff_aria"></div>
+      </div>
     </div>
 
     <div class="card">
@@ -189,6 +191,7 @@
         <div class="question" id="question" aria-live="off">–</div>
         <div class="answer" id="answer" data-i18n-aria="answer_aria"><span id="answer-text"></span><i class="caret"></i></div>
         <div class="qhint" id="qhint"></div>
+        <button class="skip" id="btn-skip" data-i18n-aria="skip_aria"><span data-i18n="skip">Skip</span> <span aria-hidden="true">⏭</span></button>
 
         <div class="countdown" id="countdown" hidden>
           <small id="countdown-label"></small>
