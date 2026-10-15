@@ -18,12 +18,17 @@ remember a few facts, work out the rest with a rule. Each lesson is a short anim
 practice played through the normal game loop (number pad, XP, daily goal). A missed practice question shows the trick
 for that question. Finishing a lesson's practice for the first time marks it ✓ and gives +100 XP.
 
-| Lesson | What it shows |
-| --- | --- |
-| ✖️ **The shrinking times table** | The 9×9 grid loses every cell a rule covers (×1, ×2 doubling, ×5 = half of ×10, ×9 = ×10 − 1, swapping the order): 81 → 15 facts to learn by heart, each with a way to rebuild it. |
-| ✖️ **Split it up** | 23 × 4 as an area of squares, cut at the tens into 80 + 12, with a slider to try other cuts and a guided 34 × 6. |
+25 lessons in five groups. Most are equation walkthroughs that end in a 3-choice question; the times table and
+"Split it up" have their own interactive stages.
 
-More lessons are listed as "Soon" (place value, pairs that make 10, rounding, counting up, ÷).
+| Group | Lessons |
+| --- | --- |
+| **Start here** | The shrinking times table (81 → 15 facts) · What a number is made of · Pairs that make 10 · Gaps to 100 and 1000 |
+| **Add & subtract** | Add from the left · Three-digit adding · Round, then fix · Count up to subtract · Shift both numbers |
+| **Multiply** | Split it up (area model + slider) · Tens × tens · Two-digit × two-digit · Round, then fix (×) · Shortcuts for ×5, ×9, ×11 · Halve one, double the other · Squares & near-squares |
+| **Divide** | Division is × backwards · Split it up (÷) · Divide by halving · Leftovers become decimals · Round to one decimal · Leftover cheat sheet · Divide by a 2-digit number |
+| **Check your answer** | Estimate & check (round to tens, then check the last digit) |
+
 Lesson content lives in `js/lessons.js` (pure, tested); each lesson's visual is a stage in `js/views/learn.js`.
 
 Every answer gets a 1-second result screen; a correct answer submits the instant it's typed (wrong ones need Enter).

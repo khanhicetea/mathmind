@@ -120,3 +120,13 @@ test('lesson progress survives a backup round-trip, and old backups get an empty
   delete old.lessons;
   assert.deepEqual(hydrate(old).lessons, {});
 });
+
+test('the leftover cheat sheet matches the game rounding', () => {
+  for (const step of LESSONS.remtable.demo.slice(0, 4)) {
+    const b = Number(step[0].replace('÷ ', ''));
+    for (const line of step.slice(1)) {
+      const [, r, tenth] = line.match(/^r(\d) → 0\.(\d)$/);
+      assert.equal(Math.floor((20 * r + b) / (2 * b)), Number(tenth), `${r}/${b}`);
+    }
+  }
+});

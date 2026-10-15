@@ -34,6 +34,16 @@ export const CATALOG = [
           { ask: ['7 + 6 = 7 + 3 + ?', [2, 3, 4], 3] },
         ],
       },
+      {
+        id: 'complement', op: 'sub', kind: 'remember', ex: '1000 − 284 = 716',
+        demo: [
+          ['100 − 37', '3 + 6 = 9', '7 + 3 = 10', '= 63'],
+          ['37 + 63 = 100'],
+          ['1000 − 284', '2 + 7 = 9', '8 + 1 = 9', '4 + 6 = 10', '= 716'],
+          ['400 − 137', '137 → 200: 63', '200 → 400: 200', '= 263'],
+          { ask: ['100 − 46 = ?', [54, 64, 56], 54] },
+        ],
+      },
     ],
   },
   {
@@ -47,6 +57,16 @@ export const CATALOG = [
           ['6 + 7 = 13'],
           ['70 + 13 = 83'],
           { ask: ['58 + 25 = 70 + ?', [3, 13, 23], 13] },
+        ],
+      },
+      {
+        id: 'hundreds', op: 'add', kind: 'rule', ex: '347 + 285 = 500 + 120 + 12',
+        demo: [
+          ['347 + 285', '= 300 + 40 + 7', '+ 200 + 80 + 5'],
+          ['300 + 200 = 500'],
+          ['40 + 80 = 120', '7 + 5 = 12'],
+          ['500 + 120 + 12', '= 632'],
+          { ask: ['256 + 371 = 500 + 120 + ?', [7, 17, 27], 7] },
         ],
       },
       {
@@ -82,9 +102,40 @@ export const CATALOG = [
     ],
   },
   {
-    group: 'muldiv',
+    group: 'mul',
     items: [
       { id: 'split', op: 'mul', kind: 'rule', steps: 6, ex: '23 × 4 = 80 + 12' },
+      {
+        id: 'zeros', op: 'mul', kind: 'rule', ex: '30 × 40 = 1200',
+        demo: [
+          ['30 × 40', '3 × 4 = 12'],
+          ['30 × 40', '= 12 + 00', '= 1200'],
+          ['60 × 7', '6 × 7 = 42', '= 420'],
+          ['50 × 80', '5 × 8 = 40', '= 4000'],
+          { ask: ['70 × 30 = ?', [210, 2100, 21000], 2100] },
+        ],
+      },
+      {
+        id: 'twobytwo', op: 'mul', kind: 'rule', ex: '47 × 38 = 1410 + 376',
+        demo: [
+          ['47 × 38', '= 47 × 30 + 47 × 8'],
+          ['47 × 30', '= 47 × 3 × 10', '= 1410'],
+          ['47 × 8', '= 320 + 56', '= 376'],
+          ['1410 + 376', '= 1786'],
+          ['386 × 47', '= 386 × 40 + 386 × 7', '= 15440 + 2702', '= 18142'],
+          { ask: ['24 × 13 = 240 + ?', [62, 72, 82], 72] },
+        ],
+      },
+      {
+        id: 'roundmul', op: 'mul', kind: 'rule', ex: '49 × 7 = 350 − 7',
+        demo: [
+          ['49 × 7', '49 = 50 − 1'],
+          ['50 × 7 = 350'],
+          ['350 − 7 = 343'],
+          ['98 × 23', '= 100 × 23 − 2 × 23', '= 2300 − 46', '= 2254'],
+          { ask: ['29 × 6 = 180 − ?', [1, 6, 12], 6] },
+        ],
+      },
       {
         id: 'shortcuts', op: 'mul', kind: 'rule', ex: '36 × 5 = 360 ÷ 2',
         demo: [
@@ -96,6 +147,31 @@ export const CATALOG = [
         ],
       },
       {
+        id: 'halvedouble', op: 'mul', kind: 'rule', ex: '25 × 16 = 50 × 8 = 400',
+        demo: [
+          ['25 × 16', '= 50 × 8', '= 100 × 4', '= 400'],
+          ['14 × 35', '= 7 × 70', '= 490'],
+          ['48 × 25', '= 4800 ÷ 4', '= 1200'],
+          ['86 × 50', '= 8600 ÷ 2', '= 4300'],
+          { ask: ['18 × 15 = 9 × ?', [15, 30, 45], 30] },
+        ],
+      },
+      {
+        id: 'squares', op: 'mul', kind: 'rule', ex: '48 × 52 = 2500 − 4',
+        demo: [
+          ['35 × 35', '3 × 4 = 12', '5 × 5 = 25', '= 1225'],
+          ['65 × 65', '6 × 7 = 42', '= 4225'],
+          ['48 × 52', '= 50 × 50 − 2 × 2', '= 2500 − 4', '= 2496'],
+          ['37 × 43', '= 40 × 40 − 3 × 3', '= 1600 − 9', '= 1591'],
+          { ask: ['45 × 45 = ?', [1625, 2025, 2045], 2025] },
+        ],
+      },
+    ],
+  },
+  {
+    group: 'div',
+    items: [
+      {
         id: 'divback', op: 'div', kind: 'rule', ex: '56 ÷ 7 → ? × 7 = 56',
         demo: [
           ['56 ÷ 7 = ?'],
@@ -106,6 +182,26 @@ export const CATALOG = [
         ],
       },
       {
+        id: 'splitdiv', op: 'div', kind: 'rule', ex: '156 ÷ 6 = 20 + 6',
+        demo: [
+          ['156 ÷ 6', '156 = 120 + 36'],
+          ['120 ÷ 6 = 20'],
+          ['36 ÷ 6 = 6'],
+          ['20 + 6 = 26', '156 ÷ 6 = 26'],
+          { ask: ['168 ÷ 7 = 140 ÷ 7 + ?', [3, 4, 28], 4] },
+        ],
+      },
+      {
+        id: 'halvediv', op: 'div', kind: 'rule', ex: '136 ÷ 4 → 68 → 34',
+        demo: [
+          ['136 ÷ 4', '136 ÷ 2 = 68', '68 ÷ 2 = 34'],
+          ['248 ÷ 8', '→ 124 → 62 → 31'],
+          ['87 ÷ 5', '= 174 ÷ 10', '= 17.4'],
+          ['340 ÷ 25', '= 1360 ÷ 100', '= 13.6'],
+          { ask: ['92 ÷ 4 = ?', [23, 24, 46], 23] },
+        ],
+      },
+      {
         id: 'decimals', op: 'div', kind: 'rule', ex: '17 ÷ 5 = 3 r2 = 3.4',
         demo: [
           ['17 ÷ 5', '= 3 r2'],
@@ -113,6 +209,55 @@ export const CATALOG = [
           ['17 ÷ 5', '= 3 + 0.4', '= 3.4'],
           ['13 ÷ 2', '= 6 r1', '= 6 + 0.5', '= 6.5'],
           { ask: ['9 ÷ 2 = ?', [4.1, 4.2, 4.5], 4.5] },
+        ],
+      },
+      {
+        id: 'roundtenth', op: 'div', kind: 'rule', ex: '23 ÷ 7 = 3 r2 ≈ 3.3',
+        demo: [
+          ['23 ÷ 7', '= 3 r2'],
+          ['2 = 20 tenths', '20 ÷ 7 = 2 r6', '→ 3.2…'],
+          ['7 ÷ 2 = 3.5', '6 > 3.5 → round up'],
+          ['23 ÷ 7 ≈ 3.3'],
+          ['19 ÷ 6', '= 3 r1', '10 ÷ 6 = 1 r4', '4 ≥ 3 → 3.2'],
+          { ask: ['10 ÷ 3 ≈ ?', [3.1, 3.3, 3.4], 3.3] },
+        ],
+      },
+      {
+        id: 'remtable', op: 'div', kind: 'remember', ex: '÷8: r1 → .1, r3 → .4',
+        demo: [
+          ['÷ 3', 'r1 → 0.3', 'r2 → 0.7'],
+          ['÷ 6', 'r1 → 0.2', 'r2 → 0.3', 'r3 → 0.5', 'r4 → 0.7', 'r5 → 0.8'],
+          ['÷ 8', 'r1 → 0.1', 'r2 → 0.3', 'r3 → 0.4', 'r4 → 0.5', 'r5 → 0.6', 'r6 → 0.8', 'r7 → 0.9'],
+          ['÷ 7', 'r1 → 0.1', 'r2 → 0.3', 'r3 → 0.4', 'r4 → 0.6', 'r5 → 0.7', 'r6 → 0.9'],
+          ['÷ 9', 'r1 … r4 → 0.1 … 0.4', 'r5 … r8 → 0.6 … 0.9'],
+          ['50 ÷ 8', '= 6 r2', 'r2 → 0.3', '≈ 6.3'],
+          { ask: ['29 ÷ 7 = 4 r1 ≈ ?', [4.1, 4.2, 4.7], 4.1] },
+        ],
+      },
+      {
+        id: 'bigdiv', op: 'div', kind: 'rule', ex: '743 ÷ 37 → 37 × 20 = 740',
+        demo: [
+          ['743 ÷ 37', '37 × 20 = 740'],
+          ['743 − 740 = 3', '= 20 r3'],
+          ['3 ÷ 37 ≈ 0.08', '→ 0.1'],
+          ['743 ÷ 37 ≈ 20.1'],
+          ['612 ÷ 29', '29 × 20 = 580', '612 − 580 = 32', '32 = 29 + 3', '= 21 r3 ≈ 21.1'],
+          { ask: ['483 ÷ 24 ≈ ?', [2.1, 20.1, 21.1], 20.1] },
+        ],
+      },
+    ],
+  },
+  {
+    group: 'check',
+    items: [
+      {
+        id: 'estimate', op: 'mul', kind: 'rule', ex: '47 × 38 ≈ 50 × 40 = 2000',
+        demo: [
+          ['47 × 38', '≈ 50 × 40', '= 2000'],
+          ['47 × 38', '7 × 8 = 56', '→ …6'],
+          ['47 × 38 = 1786?', '≈ 2000 ✓', '…6 ✓'],
+          ['47 × 38 = 2786?', '≈ 2000 ✗'],
+          { ask: ['63 × 29 = …?', [3, 7, 9], 7] },
         ],
       },
     ],
@@ -326,6 +471,156 @@ const PRACTICE = {
       const tenths = (a * 10) / b;
       const ans = formatTenths(tenths, true);
       return { ...makeQuestion('div', a, b, tenths), tip: `${q} r${r} = ${q} + ${formatTenths((r * 10) / b, true)} = ${ans}` };
+    }),
+  // 100 − x and 1000 − xyz: each digit up to 9, the last one up to 10
+  complement: (rng) =>
+    distinct(rng, (i) => {
+      const top = i % 2 ? 1000 : 100;
+      const b = 11 + Math.floor(rng() * (top - 12));
+      if (!(b % 10)) return null;
+      return sub(top, b, `${b} + ${top - b} = ${top} → ${top - b}`);
+    }),
+  // 3-digit + 3-digit: hundreds, tens, ones, then the three parts
+  hundreds: (rng) =>
+    distinct(rng, () => {
+      const a = 101 + Math.floor(rng() * 499);
+      const b = 101 + Math.floor(rng() * 399);
+      if (!(a % 10) || !(b % 10)) return null;
+      const H = a - (a % 100) + b - (b % 100);
+      const T = (a % 100) - (a % 10) + (b % 100) - (b % 10);
+      return add(a, b, `${H} + ${T} + ${(a % 10) + (b % 10)} = ${a + b}`);
+    }),
+  // tens × tens (or × a digit): multiply the digits, then put the zeros back
+  zeros: (rng) =>
+    distinct(rng, (i) => {
+      const d = 2 + Math.floor(rng() * 8);
+      const e = 3 + Math.floor(rng() * 7);
+      const [a, b] = i % 3 === 0 ? [d * 10, e] : i % 3 === 1 ? [d * 10, e * 10] : [d * 100, e];
+      return mul(a, b, `${d} × ${e} = ${d * e} → ${a * b}`);
+    }),
+  // 2-digit × 2-digit: split the second factor at the tens
+  twobytwo: (rng) =>
+    distinct(rng, () => {
+      const a = 13 + Math.floor(rng() * 86);
+      const b = 12 + Math.floor(rng() * 38);
+      const o = b % 10;
+      if (!o || !(a % 10) || a === b) return null;
+      const T = b - o;
+      return mul(a, b, `${a} × ${T} + ${a} × ${o} = ${a * T} + ${a * o} = ${a * b}`);
+    }),
+  // a factor just under a round number: multiply the round number, take the extra back
+  roundmul: (rng) =>
+    distinct(rng, () => {
+      const r = 10 * (2 + Math.floor(rng() * 9));
+      const d = 1 + Math.floor(rng() * 2);
+      const b = r === 100 ? 11 + Math.floor(rng() * 15) : 3 + Math.floor(rng() * 7);
+      return mul(r - d, b, `${r} × ${b} − ${d} × ${b} = ${r * b} − ${d * b} = ${(r - d) * b}`);
+    }),
+  // ×25, ×50, and halve-one-double-the-other
+  halvedouble: (rng) =>
+    distinct(rng, (i) => {
+      const kind = i % 3;
+      if (kind === 0) {
+        const a = 4 * (3 + Math.floor(rng() * 22));
+        return mul(a, 25, `${a * 100} ÷ 4 = ${a * 25}`);
+      }
+      if (kind === 1) {
+        const a = 2 * (6 + Math.floor(rng() * 44));
+        return mul(a, 50, `${a * 100} ÷ 2 = ${a * 50}`);
+      }
+      const a = 2 * (6 + Math.floor(rng() * 19));
+      const b = [15, 35, 45][Math.floor(rng() * 3)];
+      return mul(a, b, `${a / 2} × ${b * 2} = ${a * b}`);
+    }),
+  // squares ending in 5, and pairs either side of a round number
+  squares: (rng) =>
+    distinct(rng, (i) => {
+      if (i % 2) {
+        const t = 1 + Math.floor(rng() * 9);
+        const n = 10 * t + 5;
+        return mul(n, n, `${t} × ${t + 1} = ${t * (t + 1)} → ${n * n}`);
+      }
+      const m = 10 * (2 + Math.floor(rng() * 8));
+      const d = 1 + Math.floor(rng() * 4);
+      return mul(m - d, m + d, `${m * m} − ${d * d} = ${m * m - d * d}`);
+    }),
+  // 3-digit ÷ 1-digit, exact: split off the tens part the divisor goes into
+  splitdiv: (rng) =>
+    distinct(rng, () => {
+      const b = 3 + Math.floor(rng() * 7);
+      const q = 12 + Math.floor(rng() * 28);
+      if (!(q % 10) || q * b < 100) return null;
+      const big = b * (q - (q % 10));
+      const rest = q * b - big;
+      return { ...makeQuestion('div', q * b, b, q * 10, true), tip: `${big} ÷ ${b} + ${rest} ÷ ${b} = ${big / b} + ${rest / b} = ${q}` };
+    }),
+  // ÷4 and ÷8 by halving (exact), ÷5 by doubling then ÷10
+  halvediv: (rng) =>
+    distinct(rng, (i) => {
+      const kind = i % 3;
+      if (kind === 2) {
+        const a = 21 + Math.floor(rng() * 179);
+        if (!(a % 5)) return null;
+        const ans = formatTenths(a * 2, true);
+        return { ...makeQuestion('div', a, 5, a * 2), tip: `${a * 2} ÷ 10 = ${ans}` };
+      }
+      const k = kind ? 8 : 4;
+      const q = 11 + Math.floor(rng() * (kind ? 30 : 50));
+      const chain = [q * k];
+      while (chain.at(-1) > q) chain.push(chain.at(-1) / 2);
+      return { ...makeQuestion('div', q * k, k, q * 10, true), tip: chain.join(' → ') };
+    }),
+  // ÷3, 6, 7, 8, 9 with a leftover: tenths from the leftover, round the rest
+  roundtenth: (rng) =>
+    distinct(rng, () => {
+      const b = [3, 6, 7, 8, 9][Math.floor(rng() * 5)];
+      const a = 11 + Math.floor(rng() * 89);
+      const r = a % b;
+      if (!r) return null;
+      const q = (a - r) / b;
+      const tenths = Math.floor((20 * a + b) / (2 * b));
+      const t1 = Math.floor((r * 10) / b);
+      return {
+        ...makeQuestion('div', a, b, tenths),
+        tip: `${q} r${r} → ${r * 10} ÷ ${b} = ${t1} r${(r * 10) % b} → ${formatTenths(tenths, true)}`,
+      };
+    }),
+  // the same divisions, read straight off the leftover table
+  remtable: (rng) =>
+    distinct(rng, () => {
+      const b = [3, 6, 7, 8, 9][Math.floor(rng() * 5)];
+      const a = 11 + Math.floor(rng() * 89);
+      const r = a % b;
+      if (!r) return null;
+      const q = (a - r) / b;
+      const tenths = Math.floor((20 * a + b) / (2 * b));
+      const rt = Math.floor((20 * r + b) / (2 * b));
+      return { ...makeQuestion('div', a, b, tenths), tip: `${q} r${r}, r${r} → 0.${rt} → ${formatTenths(tenths, true)}` };
+    }),
+  // 3-digit ÷ 2-digit: a round multiple of the divisor, then the leftover
+  bigdiv: (rng) =>
+    distinct(rng, () => {
+      const b = 12 + Math.floor(rng() * 38);
+      const q = 10 * (1 + Math.floor(rng() * 3));
+      const r = 1 + Math.floor(rng() * (b - 1));
+      const a = b * q + r;
+      if (a > 999) return null;
+      const tenths = Math.floor((20 * a + b) / (2 * b));
+      return {
+        ...makeQuestion('div', a, b, tenths),
+        tip: `${b} × ${q} = ${b * q}, r${r} → ${formatTenths(tenths, true)}`,
+      };
+    }),
+  // 2-digit × 2-digit, checked by rounding and by the last digit
+  estimate: (rng) =>
+    distinct(rng, () => {
+      const a = 13 + Math.floor(rng() * 86);
+      const b = 13 + Math.floor(rng() * 86);
+      if (!(a % 10) || !(b % 10) || a === b) return null;
+      const ra = Math.round(a / 10) * 10;
+      const rb = Math.round(b / 10) * 10;
+      const p = a * b;
+      return mul(a, b, `≈ ${ra} × ${rb} = ${ra * rb}, ${a % 10} × ${b % 10} → …${p % 10}: ${p}`);
     }),
 };
 

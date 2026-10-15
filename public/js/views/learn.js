@@ -271,7 +271,7 @@ const demoStage = (l) => (el) => ({
   show(i) {
     const step = l.demo[i];
     if (!step.ask) {
-      el.innerHTML = `<div class="explain demo" style="--rc:var(--op-${l.op})"><div class="eq">${step
+      el.innerHTML = `<div class="explain demo${step.length > 5 ? ' many' : ''}" style="--rc:var(--op-${l.op})"><div class="eq">${step
         .map((s, k) => `<span style="--i:${k}">${s}</span>`)
         .join('')}</div></div>`;
       return;

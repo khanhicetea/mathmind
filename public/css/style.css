@@ -865,6 +865,7 @@ h1 { font-weight: 600; }
 .explain .eq span:last-child { color: var(--primary-text); }
 .explain.demo .eq { flex-direction: column; align-items: center; gap: 8px; }
 .explain.demo .eq span:first-child { color: var(--rc); }
+.explain.demo.many .eq { gap: 2px; font-size: 1.1rem; }
 .explain .rebuild { display: flex; flex-direction: column; gap: 2px; font: 600 1.05rem var(--display); font-variant-numeric: tabular-nums; animation: rise .35s ease-out .8s both; }
 .explain .rebuild small { font-family: "Nunito", "M PLUS Rounded 1c", system-ui, sans-serif; font-weight: 800; color: var(--muted); }
 .dotgrid { display: grid; gap: 4px; justify-content: start; padding-top: 4px; }
