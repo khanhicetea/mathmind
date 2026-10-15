@@ -1,5 +1,5 @@
 // Offline-first app shell. Bump VERSION when files are added to / removed from SHELL.
-const VERSION = 'mathmind-v9';
+const VERSION = 'mathmind-v10';
 const SHELL = [
   './',
   'css/style.css',
@@ -72,5 +72,29 @@ self.addEventListener('fetch', (event) => {
       }
       return (await refresh) || (req.mode === 'navigate' ? cache.match('./') : Response.error());
     }),
+  );
+});
+
+// Update check, requested by pwa.js on launch and whenever the app returns to the foreground.
+// Revalidates the whole shell, and only if every file came back does it swap them in together
+// (no mix of old and new modules). Tells the page when anything changed so it can offer a reload.
+self.addEventListener('message', (event) => {
+  if (event.data !== 'check-update') return;
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(VERSION);
+      const urls = SHELL.map((p) => new URL(p, self.registration.scope).href);
+      const fresh = await Promise.all(urls.map((u) => fetch(u, { cache: 'no-cache' }).catch(() => null)));
+      if (fresh.some((r) => !r || !r.ok || r.redirected)) return;
+      let changed = false;
+      for (let i = 0; i < urls.length; i++) {
+        const old = await cache.match(urls[i]);
+        const tag = fresh[i].headers.get('etag');
+        if (!old || !tag || old.headers.get('etag') !== tag) changed = true;
+      }
+      if (!changed) return;
+      await Promise.all(urls.map((u, i) => cache.put(u, fresh[i])));
+      event.source?.postMessage('updated');
+    })(),
   );
 });

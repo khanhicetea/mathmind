@@ -923,6 +923,7 @@ h1 { font-weight: 600; }
 .confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 50; }
 .toasts { position: fixed; z-index: 60; top: calc(12px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); display: grid; gap: 8px; width: min(92vw, 420px); }
 .toast { background: var(--ink); color: var(--bg); padding: 11px 16px; border-radius: 16px; font-weight: 800; font-size: .92rem; box-shadow: var(--shadow); animation: pop .2s ease-out; transition: opacity .3s, transform .3s; }
+.toast.tap { cursor: pointer; }
 .toast.out { opacity: 0; transform: translateY(-8px); }
 
 @media (max-height: 640px) {

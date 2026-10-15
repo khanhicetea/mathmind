@@ -107,7 +107,7 @@ function step() {
 
 /* ---------------- toast ---------------- */
 let toastBox;
-export function toast(msg, ms = 2800) {
+export function toast(msg, ms = 2800, onClick) {
   if (!toastBox) {
     toastBox = document.createElement('div');
     toastBox.className = 'toasts';
@@ -117,6 +117,10 @@ export function toast(msg, ms = 2800) {
   const t = document.createElement('div');
   t.className = 'toast';
   t.textContent = msg;
+  if (onClick) {
+    t.classList.add('tap');
+    t.addEventListener('click', onClick);
+  }
   toastBox.append(t);
   setTimeout(() => {
     t.classList.add('out');
