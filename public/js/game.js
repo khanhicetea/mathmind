@@ -466,15 +466,29 @@ export function recoverPending() {
 /* ---------------- input wiring ---------------- */
 // numpad: pointerdown for the lowest latency; click handles keyboard activation
 const pad = $('pad');
+// fast thumbs often land in the gaps between keys: fall back to the nearest key
+function nearestKey(x, y) {
+  let best = null;
+  let bestD = Infinity;
+  for (const b of pad.querySelectorAll('button')) {
+    const r = b.getBoundingClientRect();
+    const dx = Math.max(r.left - x, 0, x - r.right);
+    const dy = Math.max(r.top - y, 0, y - r.bottom);
+    const d = dx * dx + dy * dy;
+    if (d < bestD) (bestD = d), (best = b);
+  }
+  return best;
+}
 pad.addEventListener('pointerdown', (e) => {
-  const btn = e.target.closest('button');
-  if (!btn || btn.disabled) return;
+  if (e.button > 0) return;
   e.preventDefault();
+  const btn = e.target.closest('button') || nearestKey(e.clientX, e.clientY);
+  if (!btn || btn.disabled) return;
   btn.classList.add('down');
   press(btn.dataset.k);
 });
-for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) {
-  pad.addEventListener(ev, (e) => e.target.closest?.('button')?.classList.remove('down'), true);
+for (const ev of ['pointerup', 'pointercancel']) {
+  pad.addEventListener(ev, () => pad.querySelectorAll('.down').forEach((b) => b.classList.remove('down')));
 }
 pad.addEventListener('click', (e) => {
   // pointerdown already handled real pointer input (detail > 0); this covers Enter/Space on a focused key

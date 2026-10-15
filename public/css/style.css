@@ -645,6 +645,9 @@ h1 { font-weight: 600; }
   box-shadow: 0 -8px 26px rgba(245, 130, 40, .12);
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none; /* no double-tap zoom / gesture delay on rapid taps, even in the gaps */
 }
 .pad button {
   border: 0;
@@ -655,9 +658,9 @@ h1 { font-weight: 600; }
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
-  transition: transform .05s, background .05s, box-shadow .05s;
+  transition: background .05s, box-shadow .05s;
 }
-.pad button.down, .pad button:active { background: var(--key-pressed); transform: translateY(3px); box-shadow: 0 1px 0 var(--line), inset 0 0 0 2px var(--line); }
+.pad button.down { background: var(--key-pressed); box-shadow: 0 1px 0 var(--line), inset 0 0 0 2px var(--line); }
 .pad .fn { background: var(--fn); font-size: 1.5rem; color: var(--muted); }
 .pad .zero { grid-column: 1 / 3; }
 .pad .enter {
@@ -668,7 +671,7 @@ h1 { font-weight: 600; }
   box-shadow: 0 4px 0 #b9364f;
   font-size: 2.1rem;
 }
-.pad .enter:active, .pad .enter.down { background: var(--primary); box-shadow: 0 1px 0 #b9364f; }
+.pad .enter.down { background: var(--primary); box-shadow: 0 1px 0 #b9364f; }
 /* Phone layout: 1-2-3 on top, 7-8-9 on the third row. */
 .pad.phone [data-k="1"], .pad.phone [data-k="2"], .pad.phone [data-k="3"] { grid-row: 1; }
 .pad.phone [data-k="7"], .pad.phone [data-k="8"], .pad.phone [data-k="9"] { grid-row: 3; }
